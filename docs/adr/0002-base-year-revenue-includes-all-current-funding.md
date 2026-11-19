@@ -1,0 +1,3 @@
+# Base-year revenue includes all current funding
+
+In several countries, payroll contributions alone do not cover pensions, and the state adds earmarked taxes and transfers. We count all of this current funding as revenue in the base year, so each country starts roughly balanced and the simulation shows only the gap that future demographic change opens. The consequence is that the contribution rate in the model is an effective rate fitted to observed revenue, and it is higher than the statutory payroll rate. The rejected alternative, counting payroll contributions only, starts every country with a large deficit that reflects an accounting dispute and not demographics.
