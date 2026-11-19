@@ -3,11 +3,13 @@
 import os
 from pathlib import Path
 
+import numpy as np
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from pension_simulator.data import CountryData, load_country
 from pension_simulator.finance import fit_base_year
+from pension_simulator.population import FERTILITY_TARGET_YEAR
 from pension_simulator.simulation import Scenario, simulate
 
 DEFAULT_DATA_DIR = Path(__file__).parents[2] / "data" / "countries"
@@ -27,6 +29,25 @@ class SimulationRequest(Scenario):
     """A scenario together with the country it applies to."""
 
     country: str
+
+
+class CohortLedger(BaseModel):
+    """Lifetime ledger of each birth cohort. Every list has one entry per cohort.
+
+    Contributions and pensions are in years of average wage. A return is ``null``
+    when it does not exist.
+    """
+
+    birth_years: list[int]
+    lifetime_contributions: list[float]
+    lifetime_pensions: list[float]
+    return_above_wages: list[float | None]
+    return_above_prices: list[float | None]
+
+
+def optional(values: np.ndarray) -> list[float | None]:
+    """Turn an array into a list, with ``None`` in place of missing values."""
+    return [None if np.isnan(value) else float(value) for value in values]
 
 
 class SimulationResponse(BaseModel):
@@ -49,6 +70,7 @@ class SimulationResponse(BaseModel):
     benefit_level: list[float]
     first_deficit_year: int | None
     population: list[list[list[int]]]
+    cohorts: CohortLedger
 
 
 def country_defaults(data: CountryData) -> Scenario:
@@ -72,7 +94,6 @@ def country_defaults(data: CountryData) -> Scenario:
         print(defaults.contribution_rate)
     """
     contribution_rate, benefit_level = fit_base_year(data)
-    target_index = min(Scenario().retirement_age_year - data.base_year, len(data.fertility) - 1)
     return Scenario(
         retirement_age=data.retirement_age,
         contribution_rate=contribution_rate,
@@ -80,8 +101,8 @@ def country_defaults(data: CountryData) -> Scenario:
         indexation=data.indexation,
         wage_growth=data.wage_growth,
         interest_rate=data.interest_rate,
-        fertility=float(data.fertility[target_index].sum()),
-        net_migration=float(data.migration[0].sum()),
+        fertility=float(data.fertility[FERTILITY_TARGET_YEAR - data.base_year].sum()),
+        net_migration=float(data.migration.sum() / len(data.migration)),
     )
 
 
@@ -151,6 +172,13 @@ def create_app(data_dir: Path | None = None) -> FastAPI:
             ).tolist(),
             first_deficit_year=result.first_deficit_year,
             population=result.population.round().astype(int).tolist(),
+            cohorts=CohortLedger(
+                birth_years=result.ledger.birth_years.tolist(),
+                lifetime_contributions=result.ledger.contributions.tolist(),
+                lifetime_pensions=result.ledger.pensions.tolist(),
+                return_above_wages=optional(result.ledger.return_above_wages),
+                return_above_prices=optional(result.ledger.return_above_prices),
+            ),
         )
 
     return app

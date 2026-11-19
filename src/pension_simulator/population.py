@@ -42,7 +42,7 @@ def adjust_fertility(fertility: np.ndarray, base_year: int, target: float) -> np
     """Move the number of children per woman to a target value.
 
     The number moves in a straight line from its baseline value in the base year
-    to ``target`` in 2040, and then stays at ``target``.
+    to ``target`` in 2040. After 2040 it follows the baseline trend from that level.
 
     Parameters
     ----------
@@ -51,7 +51,7 @@ def adjust_fertility(fertility: np.ndarray, base_year: int, target: float) -> np
     base_year : int
         Calendar year of index 0.
     target : float
-        Target number of children per woman.
+        Target number of children per woman in 2040.
 
     Returns
     -------
@@ -64,28 +64,32 @@ def adjust_fertility(fertility: np.ndarray, base_year: int, target: float) -> np
 
         higher = adjust_fertility(country.fertility, country.base_year, target=2.1)
     """
-    children_per_woman = fertility.sum(axis=1)
     years = base_year + np.arange(len(fertility))
     progress = np.clip((years - base_year) / (FERTILITY_TARGET_YEAR - base_year), 0, 1)
-    # The age pattern of mothers is kept. Only the level changes.
-    factor = 1 + progress * (target / children_per_woman - 1)
+    baseline_in_target_year = fertility[FERTILITY_TARGET_YEAR - base_year].sum()
+    # The age pattern of mothers is kept. Only the level changes. A target equal
+    # to the baseline value of 2040 leaves the baseline unchanged in every year.
+    factor = 1 + progress * (target / baseline_in_target_year - 1)
     return fertility * factor[:, None]
 
 
 def adjust_migration(migration: np.ndarray, total: float) -> np.ndarray:
-    """Rescale net migration to a fixed number of people per year.
+    """Rescale net migration to a chosen yearly average.
+
+    Every year is scaled by the same factor, so the baseline pattern over time,
+    age, and sex is kept.
 
     Parameters
     ----------
     migration : np.ndarray
         Baseline net migrants of shape ``[T, 2, 101]``.
     total : float
-        Net migrants per year, summed over ages and sexes.
+        Net migrants per year, summed over ages and sexes and averaged over all years.
 
     Returns
     -------
     np.ndarray
-        Net migrants of shape ``[T, 2, 101]`` with the baseline age and sex pattern.
+        Net migrants of shape ``[T, 2, 101]``.
 
     Examples
     --------
@@ -93,8 +97,8 @@ def adjust_migration(migration: np.ndarray, total: float) -> np.ndarray:
 
         closed_borders = adjust_migration(country.migration, total=0.0)
     """
-    baseline_total = migration.sum(axis=(1, 2), keepdims=True)
-    return migration * (total / baseline_total)
+    baseline_average = migration.sum() / len(migration)
+    return migration * (total / baseline_average)
 
 
 def project(

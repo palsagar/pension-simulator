@@ -48,3 +48,9 @@ def test_unknown_country_and_invalid_values_are_rejected(client: TestClient) -> 
     assert (
         client.post("/simulate", json={"country": "TST", "retirement_age": 20}).status_code == 422
     )
+
+
+def test_simulate_returns_cohort_ledger(client: TestClient) -> None:
+    cohorts = client.post("/simulate", json={"country": "TST"}).json()["cohorts"]
+    assert cohorts["birth_years"][0] == 1960
+    assert len(cohorts["return_above_wages"]) == len(cohorts["birth_years"])

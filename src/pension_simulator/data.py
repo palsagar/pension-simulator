@@ -25,6 +25,9 @@ ARRAY_FIELDS = (
     "fertility",
     "migration",
     "employment",
+    "history_contribution_rate",
+    "history_wage",
+    "history_survival",
 )
 
 
@@ -66,6 +69,14 @@ class CountryData:
         Default yearly growth of the average wage, above inflation.
     interest_rate : float
         Default yearly interest rate on pension debt, above inflation.
+    history_contribution_rate : np.ndarray
+        Contribution rate in each of the ``H`` years before the base year, of shape ``[H]``.
+    history_wage : np.ndarray
+        Average wage above inflation in the years before the base year, of shape
+        ``[H]``. The wage of the base year is 1.
+    history_survival : np.ndarray
+        Probability of surviving one year in the years before the base year, of
+        shape ``[H, 2, 101]``.
 
     Examples
     --------
@@ -91,6 +102,9 @@ class CountryData:
     indexation: Indexation
     wage_growth: float
     interest_rate: float
+    history_contribution_rate: np.ndarray
+    history_wage: np.ndarray
+    history_survival: np.ndarray
 
 
 def save_country(data: CountryData, path: Path) -> None:

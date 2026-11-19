@@ -6,6 +6,7 @@ import pytest
 from pension_simulator.data import N_AGES, CountryData
 
 N_YEARS = 75
+N_HISTORY = 45
 
 
 @pytest.fixture
@@ -45,4 +46,7 @@ def country() -> CountryData:
         indexation="prices",
         wage_growth=0.01,
         interest_rate=0.01,
+        history_contribution_rate=np.full(N_HISTORY, 0.14 / 0.6),
+        history_wage=1.01 ** np.arange(-N_HISTORY, 0.0),
+        history_survival=np.broadcast_to(survival[0], (N_HISTORY, 2, N_AGES)).copy(),
     )

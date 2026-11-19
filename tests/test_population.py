@@ -57,13 +57,13 @@ def test_longevity_pace(country: CountryData) -> None:
     assert (adjust_survival(country.survival, 1.5)[-1] > country.survival[-1]).all()
 
 
-def test_fertility_reaches_target_in_2040_and_holds(country: CountryData) -> None:
+def test_fertility_reaches_target_in_2040(country: CountryData) -> None:
     adjusted = adjust_fertility(country.fertility, country.base_year, target=2.1)
     children = adjusted.sum(axis=1)
     assert children[0] == pytest.approx(1.6)
     assert children[2040 - 2025 :] == pytest.approx(2.1)
 
 
-def test_migration_is_rescaled_to_total(country: CountryData) -> None:
+def test_migration_is_rescaled_to_yearly_average(country: CountryData) -> None:
     adjusted = adjust_migration(country.migration, total=10_000)
-    assert adjusted.sum(axis=(1, 2)) == pytest.approx(10_000)
+    assert adjusted.sum() / len(adjusted) == pytest.approx(10_000)

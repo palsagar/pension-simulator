@@ -48,8 +48,8 @@ The baseline values of `S` and `F` come from the United Nations medium projectio
 
 | Control | Effect |
 |---|---|
-| Fertility | The user sets a target number of children per woman. Every `F[a, t]` is multiplied by a factor that moves in a straight line from 1 in 2025 to the value that gives the target in 2040, and stays there. |
-| Net migration | The user sets a number of people per year. The baseline age and sex pattern of migrants is rescaled to that total. |
+| Fertility | The user sets a target number of children per woman. Every `F[a, t]` is multiplied by a factor that moves in a straight line from 1 in 2025 to the value that gives the target in 2040. The factor then stays fixed, so fertility follows the United Nations trend from the new level. |
+| Net migration | The user sets the average number of people per year over the simulation. The baseline is multiplied by one factor in all years, so its pattern over time, age, and sex is kept. |
 | Longevity pace | The user sets a pace `p` between 0 and 1.5. The death rate becomes `log μ'(a,t) = log μ(a,2025) + p · ( log μ(a,t) − log μ(a,2025) )`. A pace of 0 freezes mortality at its 2025 level. A pace of 1 is the United Nations projection. |
 
 ## 2. Finances
@@ -79,7 +79,7 @@ GDP(t) = w(t) · W(t) / λ
 
 ### Contributions and pensions
 
-`τ(t)` is the contribution rate and `ρ` is the benefit level.
+`τ(t)` is the contribution rate. `ρ` is the benefit level of a newly awarded pension: the first pension of a new retiree divided by the average wage of that year. Under price indexation, the benefit level across all retirees is lower than `ρ`, because older pensions have fallen behind wages.
 
 ```
 Contributions  C(t) = τ(t) · w(t) · W(t)
@@ -141,6 +141,8 @@ The internal rate of return is the rate `i` at which the person's payments and r
 The model reports this rate in two units. The rate above price inflation uses amounts in constant euros, as in the formula above. The rate above wage growth uses amounts in years of average wage, so it removes the effect of economic growth and compares cohorts on equal terms. The French Conseil d'orientation des retraites publishes both, and its headline figure is the rate above wage growth.
 
 Years before 2025 use recorded data: the recorded population, and a contribution rate and benefit level fitted to recorded pension spending in each past year. Recorded pension spending starts in 1980 for all four countries, so the ledger covers cohorts born from 1960. Years from 2025 use the simulation. The model always computes to 2100, so that cohorts who retire after 2050 have a complete ledger.
+
+The ledger makes two simplifications for the years before 2025. Employment rates by age take their current values. Revenue is assumed to have matched spending in each past year, so the past contribution rate is recorded pension spending divided by the wage bill.
 
 Under the "borrow" balancing rule, part of the cost of pensions sits in the pension debt and is charged to no cohort. The internal rate of return under that rule must be read together with the pension debt.
 

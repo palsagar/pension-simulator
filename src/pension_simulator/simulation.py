@@ -12,6 +12,7 @@ from pension_simulator.finance import (
     fit_base_year,
     run_finances,
 )
+from pension_simulator.ledger import Ledger, lifetime_ledger
 from pension_simulator.population import (
     adjust_fertility,
     adjust_migration,
@@ -42,9 +43,9 @@ class Scenario(BaseModel):
     interest_rate : float or None
         Yearly interest rate on pension debt, above inflation.
     fertility : float or None
-        Children per woman, reached in 2040.
+        Children per woman in 2040.
     net_migration : float or None
-        Net migrants per year.
+        Net migrants per year, averaged over the simulation.
     longevity_pace : float
         Share of the projected fall in mortality that takes place.
 
@@ -82,6 +83,8 @@ class Simulation:
         Retirement age in each year.
     finances : Finances
         Yearly finances of the pension system.
+    ledger : Ledger
+        Lifetime ledger of each birth cohort.
 
     Examples
     --------
@@ -95,6 +98,7 @@ class Simulation:
     population: np.ndarray
     retirement_age: np.ndarray
     finances: Finances
+    ledger: Ledger
 
     @property
     def first_deficit_year(self) -> int | None:
@@ -151,6 +155,7 @@ def simulate(data: CountryData, scenario: Scenario) -> Simulation:
     def choice[T](value: T | None, default: T) -> T:
         return default if value is None else value
 
+    wage_growth = choice(scenario.wage_growth, data.wage_growth)
     finances = run_finances(
         data,
         population,
@@ -159,7 +164,8 @@ def simulate(data: CountryData, scenario: Scenario) -> Simulation:
         benefit_level=choice(scenario.benefit_level, fitted_level),
         balancing_rule=scenario.balancing_rule,
         indexation=choice(scenario.indexation, data.indexation),
-        wage_growth=choice(scenario.wage_growth, data.wage_growth),
+        wage_growth=wage_growth,
         interest_rate=choice(scenario.interest_rate, data.interest_rate),
     )
-    return Simulation(years, population, retirement_age, finances)
+    ledger = lifetime_ledger(data, finances, retirement_age, survival, wage_growth)
+    return Simulation(years, population, retirement_age, finances, ledger)
