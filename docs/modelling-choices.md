@@ -21,7 +21,7 @@ Official projections, such as the European Commission's Ageing Report, include r
 | Spain | 2.30 | 1.06 | 12.3 | 26.2 | 181 |
 | Italy | 1.79 | 0.97 | 16.1 | 29.3 | 198 |
 
-These are the baseline results with all default values.
+These are the baseline results with all default values. The values come from the country files built in November 2026, and they change when the data is rebuilt.
 
 ## Scope
 
@@ -95,7 +95,7 @@ No dataset supplies these values in a usable form.
 | Retirement age in 2025 | 62.75 | 66.17 | 67.0 | 66.67 |
 | Pension indexation | prices | wages | prices | prices |
 
-The retirement age is the standard age in law for a person who retires in 2025.
+For Germany, Italy, and Spain, the value is the standard retirement age in law for a person who retires in 2025. For France, the value is the minimum legal age, which is 62 years and 9 months. Most people in France retire at this age. The French age for a full pension without conditions is 67. This difference in concept is a limit on comparing the countries.
 
 Two defaults apply to every country: wages grow by 1% a year above inflation, and pension debt carries 1.5% interest a year above inflation. The user can change both.
 
@@ -113,7 +113,7 @@ Two defaults apply to every country: wages grow by 1% a year above inflation, an
 
 ## Comparison with official French figures
 
-The Conseil d'orientation des retraites publishes an internal rate of return for one typical case: a private-sector employee with a full career. Its June 2026 report gives the following values.
+The Conseil d'orientation des retraites publishes an internal rate of return for one typical case: a private-sector employee with a full career. Its June 2026 report gives the following values. The return above wage growth is in Part 3, Chapter 1, Figure 3.7, and the return above price inflation is in the methodological annex, Figure A2.13.
 
 | Cohort | Return above wage growth | Return above price inflation |
 |---|---|---|
