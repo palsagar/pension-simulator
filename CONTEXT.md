@@ -56,7 +56,7 @@ For one **Cohort**, the total contributions paid and the total pensions received
 _Avoid_: Generational account
 
 **Internal rate of return**:
-The yearly rate of return, above price inflation, that a **Cohort** earns on its contributions through the pensions it later receives.
+The yearly rate of return that a **Cohort** earns on its contributions through the pensions it later receives. It is stated in one of two units: above wage growth, or above price inflation.
 _Avoid_: Yield, recovery rate
 
 ### The population

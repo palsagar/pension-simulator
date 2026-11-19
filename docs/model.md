@@ -42,7 +42,7 @@ N[s, 0, t+1] = B(t) · share_s · S_birth[s, t] + M[s, 0, t]
 
 `share_s` is the share of births of each sex (about 0.512 boys). `S_birth` is the probability that a newborn survives to the end of the calendar year.
 
-The baseline values of `S`, `F`, and `M` come from the United Nations medium projection. With these values the model must reproduce the United Nations population projection to within 1% in every year to 2100. An automated test enforces this.
+The baseline values of `S` and `F` come from the United Nations medium projection. The United Nations publishes net migration as a yearly total only, so `M` by age and sex is derived as a residual: the projected population of each age, minus the survivors of the population one year younger in the year before. With these values the model must reproduce the United Nations population projection to within 1% in every year to 2100. An automated test enforces this.
 
 ### User controls on the population
 
@@ -138,7 +138,9 @@ The internal rate of return is the rate `i` at which the person's payments and r
 Σ_a  l_c(a) · [ pension(a) − contribution(a) ] / (1 + i)^a  =  0
 ```
 
-Years before 2025 use recorded data: the recorded population, and a contribution rate and benefit level fitted to recorded pension spending in each past year. Years from 2025 use the simulation. The model always computes to 2100, so that cohorts who retire after 2050 have a complete ledger.
+The model reports this rate in two units. The rate above price inflation uses amounts in constant euros, as in the formula above. The rate above wage growth uses amounts in years of average wage, so it removes the effect of economic growth and compares cohorts on equal terms. The French Conseil d'orientation des retraites publishes both, and its headline figure is the rate above wage growth.
+
+Years before 2025 use recorded data: the recorded population, and a contribution rate and benefit level fitted to recorded pension spending in each past year. Recorded pension spending starts in 1980 for all four countries, so the ledger covers cohorts born from 1960. Years from 2025 use the simulation. The model always computes to 2100, so that cohorts who retire after 2050 have a complete ledger.
 
 Under the "borrow" balancing rule, part of the cost of pensions sits in the pension debt and is charged to no cohort. The internal rate of return under that rule must be read together with the pension debt.
 
