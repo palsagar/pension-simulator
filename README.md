@@ -37,6 +37,7 @@ uv run python scripts/build_country_data.py   # rebuild data/countries from publ
 ## Documents
 
 - [`docs/model.md`](docs/model.md): the mathematics of the model.
+- [`docs/modelling-choices.md`](docs/modelling-choices.md): the assumptions, data sources, and simplifications, and how to read the results.
 - [`CONTEXT.md`](CONTEXT.md): the vocabulary used in the project.
 - [`docs/adr/`](docs/adr/): the reasons for the less obvious design decisions.
 
