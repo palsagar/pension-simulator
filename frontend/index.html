@@ -22,6 +22,8 @@
 <header style="border-bottom: 1px solid var(--color-rule)">
 <div class="wrap" style="padding-top: var(--space-3); padding-bottom: var(--space-3); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5)">
 <span class="wordmark">Western Europe Pension Simulator</span>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2)">
+<p class="byline small muted">by <a href="https://sagar-pal.dev" target="_blank" rel="noopener noreferrer">Sagar Pal</a> · <a href="https://github.com/palsagar/pension-simulator" target="_blank" rel="noopener noreferrer">★ Star on GitHub</a></p>
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4)">
 <fieldset>
 <legend class="vh">Time span of the charts</legend>
@@ -32,6 +34,7 @@
 </fieldset>
 <button type="button" class="btn" @click="toggleTheme()" x-text="theme === 'dark' ? 'Light theme' : 'Dark theme'">Dark theme</button>
 <a class="small" href="#how">How this works</a>
+</div>
 </div>
 </div>
 </header>
