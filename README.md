@@ -10,6 +10,8 @@ The first version covers France, Germany, Italy, and Spain.
 
 The first version is working: the model, the country data for the four countries, the web service, and the frontend.
 
+The simulator is live at https://pensions.gpuphysics.dev. Each merge to `main` deploys a new version.
+
 ## Run it
 
 The project uses [uv](https://docs.astral.sh/uv/).
