@@ -5,6 +5,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
 COPY data/countries ./data/countries
+COPY frontend ./frontend
 RUN uv sync --locked --no-dev
 
 ENV PENSION_DATA_DIR=/app/data/countries

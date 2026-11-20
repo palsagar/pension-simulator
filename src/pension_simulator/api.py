@@ -1,10 +1,14 @@
-"""The web layer: a thin, stateless FastAPI application on top of the model."""
+"""The web layer: a thin, stateless FastAPI application on top of the model.
+
+The same application serves the frontend, a folder of static files, at ``/``.
+"""
 
 import os
 from pathlib import Path
 
 import numpy as np
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from pension_simulator.data import CountryData, load_country
@@ -13,6 +17,7 @@ from pension_simulator.population import FERTILITY_TARGET_YEAR
 from pension_simulator.simulation import Scenario, simulate
 
 DEFAULT_DATA_DIR = Path(__file__).parents[2] / "data" / "countries"
+FRONTEND_DIR = Path(__file__).parents[2] / "frontend"
 
 
 class Country(BaseModel):
@@ -181,4 +186,6 @@ def create_app(data_dir: Path | None = None) -> FastAPI:
             ),
         )
 
+    # Mounted last, so that the API routes above take precedence over the static files.
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
     return app

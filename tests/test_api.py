@@ -54,3 +54,12 @@ def test_simulate_returns_cohort_ledger(client: TestClient) -> None:
     cohorts = client.post("/simulate", json={"country": "TST"}).json()["cohorts"]
     assert cohorts["birth_years"][0] == 1960
     assert len(cohorts["return_above_wages"]) == len(cohorts["birth_years"])
+
+
+def test_frontend_is_served_next_to_the_api(client: TestClient) -> None:
+    page = client.get("/")
+    assert page.status_code == 200
+    assert "<title>Pension Simulator</title>" in page.text
+    assert client.get("/app.js").status_code == 200
+    # The static files must not hide the API routes.
+    assert client.get("/countries").headers["content-type"] == "application/json"
