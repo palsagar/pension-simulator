@@ -8,7 +8,7 @@ An educational simulator of pay-as-you-go pension systems. It projects a country
 
 **Pay-as-you-go pension system**:
 A public pension scheme in which the pensions of today's **Retirees** are paid directly from the contributions of today's **Contributors**, with no invested fund behind them.
-_Avoid_: Ponzi scheme (allowed as informal wording in the user interface only), state pension fund
+_Avoid_: Ponzi scheme, state pension fund
 
 **Contributor**:
 A person of working age who is employed and pays pension contributions in a given year.

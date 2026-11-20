@@ -49,5 +49,5 @@ tag before `app.js`, and allow that origin with CORS on the service.
   is back on the marker. The same holds for the other sliders.
 - **Payload.** `/simulate` returns the whole population table, about 100 kB of JSON per call.
   This is fine on one machine. Turn on gzip (`GZipMiddleware`) before deploying.
-- The "Method and data sources" link points at `docs/modelling-choices.md` on GitHub. Change
+- The "How this works" section links to `docs/model.md` and `docs/modelling-choices.md` on GitHub. Change
   it in `index.html` if the repository moves.
