@@ -242,10 +242,13 @@
         // for the previous country cannot replace the charts of the new one.
         // Returns false when the baseline could not be loaded.
         async loadBaseline() {
-          const mine = ++baseSeq; seq++; if (controller) controller.abort(); busy = false; queued = false;
-          let base; try { base = await this.post({ country: this.code }); } catch (e) { if (mine !== baseSeq) return true; this.error = true; return false; }
+          // The baseline holds the request slot: a control moved while it loads waits, and is sent after it.
+          // The baseline has the same limit of 10 seconds as a scenario request.
+          const mine = ++baseSeq; seq++; if (controller) controller.abort(); busy = true; queued = false;
+          const ctl = controller = new AbortController(); const limit = setTimeout(() => ctl.abort(), 10000);
+          let base; try { base = await this.post({ country: this.code }, ctl.signal); } catch (e) { if (mine !== baseSeq) return true; busy = false; queued = false; this.error = true; return false; } finally { clearTimeout(limit); }
           if (mine !== baseSeq) return true;
-          data.base = base; this.error = false;
+          data.base = base; this.error = false; busy = false; queued = false;
           if (!this.changed) { data.run = data.base; data.max = popMax(data.base); this.version++; this.syncUrl(); this.$nextTick(() => this.draw()); } else await this.simulate();
           return true;
         },
@@ -265,7 +268,7 @@
             if (mine !== seq || !run) return;
             data.run = run; data.max = popMax(run); this.error = false; this.version++; this.syncUrl(); this.$nextTick(() => this.draw());
           } catch (e) { if ((e.name !== 'AbortError' || late) && mine === seq) this.error = true; }
-          // A new baseline has already cleared the flags, so an answer from before it leaves them alone.
+          // A new baseline owns the flags from the moment it starts, so an answer from before it leaves them alone.
           finally { clearTimeout(limit); if (mine === seq) { busy = false; if (queued) { queued = false; this.simulate(); } } }
         },
         syncUrl() {
