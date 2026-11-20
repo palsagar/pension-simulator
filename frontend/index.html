@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pension Simulator</title>
+<title>Western Europe Pension Simulator</title>
 <meta name="description" content="Pick a country, move the retirement age, and see what happens to its pay-as-you-go pension system up to 2050.">
 <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e121b" media="(prefers-color-scheme: dark)">
@@ -21,7 +21,7 @@
 
 <header style="border-bottom: 1px solid var(--color-rule)">
 <div class="wrap" style="padding-top: var(--space-3); padding-bottom: var(--space-3); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5)">
-<span class="wordmark">Pension Simulator</span>
+<span class="wordmark">Western Europe Pension Simulator</span>
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4)">
 <fieldset>
 <legend class="vh">Time span of the charts</legend>
@@ -39,7 +39,7 @@
 <div class="wrap" style="padding-top: var(--space-5); padding-bottom: var(--space-8)">
 
 <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3) var(--space-7); padding-bottom: var(--space-5)">
-<h1 class="display" style="flex: 1.3 1 520px">Is your pension a Ponzi scheme?</h1>
+<h1 class="display" style="flex: 1.3 1 520px">Who pays for your pension?</h1>
 <p class="prose" style="flex: 1 1 380px">Many European countries pay pensions straight from the wages of today's workers. That works when there are many workers per retiree, and that number is falling. Move the retirement age and see who ends up paying.</p>
 </div>
 
@@ -277,12 +277,38 @@
 </figure>
 
 <section id="how" style="display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-7); padding-top: var(--space-6); border-top: 1px solid var(--color-rule); margin-top: var(--space-5)">
-<h2 class="display" style="font-size: 28px; flex: 1 1 220px">How this works</h2>
-<div style="flex: 3 1 420px; display: flex; flex-direction: column; gap: var(--space-3)">
+<h2 class="display" style="font-size: 28px; flex: 1 1 100%">How this works</h2>
+<div style="flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--space-3) var(--space-5)">
 <p class="prose">The simulator moves every birth year forward one year at a time, for women and men separately, starting from the United Nations population projection. People in work below the retirement age pay contributions. People at or above it receive a pension.</p>
 <p class="prose">Each year the contributions are compared with the pensions. A gap is covered in the way you choose: by borrowing, by a higher contribution rate, or by a lower benefit level. Finances do not feed back into births, deaths, migration, or employment.</p>
-<p class="prose">Population data come from the United Nations, employment and pension spending from the OECD, and economic series from the European Commission. <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/modelling-choices.md">Method and data sources</a></p>
+<p class="prose">Behind the charts is a standard model of demography, the McKendrick–von Foerster equation, joined to the accounts of the pension system. The simulator solves the equations below in steps of one year, from 2025 to 2100, each time you move a control.</p>
 </div>
+<div class="eqs" role="group" aria-label="The equations of the model">
+<div class="card eq">
+<h3 class="lab">Population</h3>
+<div class="eq-m"><math displaystyle="true"><mrow><mfrac><mrow><mi>∂</mi><mi>n</mi></mrow><mrow><mi>∂</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>∂</mi><mi>n</mi></mrow><mrow><mi>∂</mi><mi>a</mi></mrow></mfrac><mo>=</mo><mo>−</mo><mrow><mi>μ</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>n</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mo>+</mo><mrow><mi>m</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow></mrow></math></div>
+<div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>n</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mo>=</mo><mo>∫</mo><mrow><mi>f</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><msub><mi>n</mi><mi>women</mi></msub><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>d</mi><mi>a</mi></mrow></mrow></math></div>
+<p class="small muted"><i>n</i>(<i>a</i>, <i>t</i>) is the number of people of age <i>a</i> at time <i>t</i>. People grow older, die at the rate <i>μ</i>, and migrate at the net rate <i>m</i>. Births follow the fertility rate <i>f</i> of women.</p>
+</div>
+<div class="card eq">
+<h3 class="lab">Contributions and pensions</h3>
+<div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>C</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>=</mo><mrow><mi>τ</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>w</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><msubsup><mo>∫</mo><mn>0</mn><mrow><mi>R</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow></msubsup><mrow><mi>e</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>n</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>d</mi><mi>a</mi></mrow></mrow></math></div>
+<div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>B</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>=</mo><msubsup><mo>∫</mo><mrow><mi>R</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mi>∞</mi></msubsup><mrow><mi>b</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>n</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>d</mi><mi>a</mi></mrow></mrow></math></div>
+<p class="small muted">People below the retirement age <i>R</i>(<i>t</i>) work at the employment rate <i>e</i> and pay the contribution rate <i>τ</i> on the average wage <i>w</i>. Each person above it receives a pension <i>b</i>.</p>
+</div>
+<div class="card eq">
+<h3 class="lab">Pension debt</h3>
+<div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>D</mi><mo>(</mo><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow><mo>)</mo></mrow><mo>=</mo><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>r</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>D</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>−</mo><mo>[</mo><mrow><mi>C</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>−</mo><mrow><mi>B</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>]</mo></mrow></math></div>
+<div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>D</mi><mo>(</mo><mn>2025</mn><mo>)</mo></mrow><mo>=</mo><mn>0</mn></mrow></math></div>
+<p class="small muted">The gap of each year is added to the debt <i>D</i>, which carries the interest rate <i>r</i>.</p>
+</div>
+<div class="card eq">
+<h3 class="lab">Generations</h3>
+<div class="eq-m"><math displaystyle="true"><mrow><munder><mo>∑</mo><mi>a</mi></munder><mrow><msub><mi>l</mi><mi>c</mi></msub><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mfrac><mrow><mrow><mi>pension</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mo>−</mo><mrow><mi>contribution</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow></mrow><msup><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>i</mi><mo>)</mo></mrow><mi>a</mi></msup></mfrac><mo>=</mo><mn>0</mn></mrow></math></div>
+<p class="small muted">For people born in year <i>c</i>, the rate of return <i>i</i> is the rate at which their pensions and contributions cancel over a lifetime. <i>l</i><sub><i>c</i></sub>(<i>a</i>) is their chance of being alive at age <i>a</i>.</p>
+</div>
+</div>
+<p class="prose" style="flex: 1 1 100%; max-width: 96ch">Population data come from the United Nations, employment and pension spending from the OECD, and economic series from the European Commission. The code and every data file are public. <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/model.md">The full mathematics</a> · <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/modelling-choices.md">Assumptions and data sources</a></p>
 </section>
 
 </main>
