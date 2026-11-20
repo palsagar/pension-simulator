@@ -111,11 +111,12 @@ body { margin: 0; }
 .prose { font-size: var(--text-prose); line-height: 1.55; max-width: 62ch; text-wrap: pretty; }
 .muted { color: var(--color-muted); }
 .small { font-size: var(--text-sm); }
-/* the equations in "How this works": a caption, then the mathematics; a long line scrolls sideways on a phone */
-.eqs { display: flex; flex-direction: column; max-width: 62ch; border-top: 1px solid var(--color-rule); }
-.eq { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--color-rule); }
-.eq-m { overflow-x: auto; overflow-y: hidden; padding: var(--space-1) 0; }
-.eq-m math { font-size: 17px; white-space: nowrap; }
+/* the equations in "How this works": a grid of cards, each with the mathematics and a caption */
+.eqs { flex: 1 1 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(340px, 100%), 1fr)); gap: var(--space-4); }
+.eq { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); min-width: 0; }
+.eq-m { overflow-x: auto; overflow-y: hidden; }
+.eq-m math { font-size: 16px; white-space: nowrap; }
+.eq > p { margin-top: auto; padding-top: var(--space-1); }
 .eq i { font-family: 'STIX Two Text', Cambria, 'Times New Roman', Georgia, serif; font-style: italic; font-synthesis: style; font-size: 1.1em; }
 .lab { font-size: var(--text-sm); font-weight: 600; }
 .title { font-size: var(--text-title); font-weight: 600; line-height: 1.25; }

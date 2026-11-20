@@ -277,34 +277,38 @@
 </figure>
 
 <section id="how" style="display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-7); padding-top: var(--space-6); border-top: 1px solid var(--color-rule); margin-top: var(--space-5)">
-<h2 class="display" style="font-size: 28px; flex: 1 1 220px">How this works</h2>
-<div style="flex: 3 1 420px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-3)">
+<h2 class="display" style="font-size: 28px; flex: 1 1 100%">How this works</h2>
+<div style="flex: 1 1 100%; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: var(--space-3) var(--space-5)">
 <p class="prose">The simulator moves every birth year forward one year at a time, for women and men separately, starting from the United Nations population projection. People in work below the retirement age pay contributions. People at or above it receive a pension.</p>
 <p class="prose">Each year the contributions are compared with the pensions. A gap is covered in the way you choose: by borrowing, by a higher contribution rate, or by a lower benefit level. Finances do not feed back into births, deaths, migration, or employment.</p>
 <p class="prose">Behind the charts is a standard model of population science, the McKendrick–von Foerster equation, joined to the accounts of the pension system. The simulator solves the equations below in steps of one year, from 2025 to 2100, each time you move a control.</p>
+</div>
 <div class="eqs" role="group" aria-label="The equations of the model">
-<div class="eq">
-<p class="small"><span class="lab">Population.</span> <span class="muted"><i>n</i>(<i>a</i>, <i>t</i>) is the number of people of age <i>a</i> at time <i>t</i>. People grow older, die at the rate <i>μ</i>, and migrate at the net rate <i>m</i>. Births follow the fertility rate <i>f</i> of women.</span></p>
+<div class="card eq">
+<h3 class="lab">Population</h3>
 <div class="eq-m"><math displaystyle="true"><mrow><mfrac><mrow><mi>∂</mi><mi>n</mi></mrow><mrow><mi>∂</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mfrac><mrow><mi>∂</mi><mi>n</mi></mrow><mrow><mi>∂</mi><mi>a</mi></mrow></mfrac><mo>=</mo><mo>−</mo><mrow><mi>μ</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>n</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mo>+</mo><mrow><mi>m</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow></mrow></math></div>
 <div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>n</mi><mo>(</mo><mn>0</mn><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mo>=</mo><mo>∫</mo><mrow><mi>f</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><msub><mi>n</mi><mi>women</mi></msub><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>d</mi><mi>a</mi></mrow></mrow></math></div>
+<p class="small muted"><i>n</i>(<i>a</i>, <i>t</i>) is the number of people of age <i>a</i> at time <i>t</i>. People grow older, die at the rate <i>μ</i>, and migrate at the net rate <i>m</i>. Births follow the fertility rate <i>f</i> of women.</p>
 </div>
-<div class="eq">
-<p class="small"><span class="lab">Contributions and pensions.</span> <span class="muted">People below the retirement age <i>R</i>(<i>t</i>) work at the employment rate <i>e</i> and pay the contribution rate <i>τ</i> on the average wage <i>w</i>. Each person above it receives a pension <i>b</i>.</span></p>
+<div class="card eq">
+<h3 class="lab">Contributions and pensions</h3>
 <div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>C</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>=</mo><mrow><mi>τ</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>w</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><msubsup><mo>∫</mo><mn>0</mn><mrow><mi>R</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow></msubsup><mrow><mi>e</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>n</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>d</mi><mi>a</mi></mrow></mrow></math></div>
 <div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>B</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>=</mo><msubsup><mo>∫</mo><mrow><mi>R</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mi>∞</mi></msubsup><mrow><mi>b</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>n</mi><mo>(</mo><mi>a</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>d</mi><mi>a</mi></mrow></mrow></math></div>
+<p class="small muted">People below the retirement age <i>R</i>(<i>t</i>) work at the employment rate <i>e</i> and pay the contribution rate <i>τ</i> on the average wage <i>w</i>. Each person above it receives a pension <i>b</i>.</p>
 </div>
-<div class="eq">
-<p class="small"><span class="lab">Pension debt.</span> <span class="muted">The gap of each year is added to the debt <i>D</i>, which carries the interest rate <i>r</i>.</span></p>
+<div class="card eq">
+<h3 class="lab">Pension debt</h3>
 <div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>D</mi><mo>(</mo><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow><mo>)</mo></mrow><mo>=</mo><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>r</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mrow><mi>D</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>−</mo><mo>[</mo><mrow><mi>C</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>−</mo><mrow><mi>B</mi><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>]</mo></mrow></math></div>
 <div class="eq-m"><math displaystyle="true"><mrow><mrow><mi>D</mi><mo>(</mo><mn>2025</mn><mo>)</mo></mrow><mo>=</mo><mn>0</mn></mrow></math></div>
+<p class="small muted">The gap of each year is added to the debt <i>D</i>, which carries the interest rate <i>r</i>.</p>
 </div>
-<div class="eq">
-<p class="small"><span class="lab">Generations.</span> <span class="muted">For people born in year <i>c</i>, the rate of return <i>i</i> is the rate at which their pensions and contributions cancel over a lifetime. <i>l</i><sub><i>c</i></sub>(<i>a</i>) is their chance of being alive at age <i>a</i>.</span></p>
+<div class="card eq">
+<h3 class="lab">Generations</h3>
 <div class="eq-m"><math displaystyle="true"><mrow><munder><mo>∑</mo><mi>a</mi></munder><mrow><msub><mi>l</mi><mi>c</mi></msub><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mspace width="0.25em"></mspace><mfrac><mrow><mrow><mi>pension</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow><mo>−</mo><mrow><mi>contribution</mi><mo>(</mo><mi>a</mi><mo>)</mo></mrow></mrow><msup><mrow><mo>(</mo><mn>1</mn><mo>+</mo><mi>i</mi><mo>)</mo></mrow><mi>a</mi></msup></mfrac><mo>=</mo><mn>0</mn></mrow></math></div>
+<p class="small muted">For people born in year <i>c</i>, the rate of return <i>i</i> is the rate at which their pensions and contributions cancel over a lifetime. <i>l</i><sub><i>c</i></sub>(<i>a</i>) is their chance of being alive at age <i>a</i>.</p>
 </div>
 </div>
-<p class="prose">Population data come from the United Nations, employment and pension spending from the OECD, and economic series from the European Commission. The code and every data file are public. <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/model.md">The full mathematics</a> · <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/modelling-choices.md">Assumptions and data sources</a></p>
-</div>
+<p class="prose" style="flex: 1 1 100%; max-width: 96ch">Population data come from the United Nations, employment and pension spending from the OECD, and economic series from the European Commission. The code and every data file are public. <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/model.md">The full mathematics</a> · <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/modelling-choices.md">Assumptions and data sources</a></p>
 </section>
 
 </main>
