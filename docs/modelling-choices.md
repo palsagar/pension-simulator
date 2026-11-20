@@ -16,10 +16,10 @@ Official projections, such as the European Commission's Ageing Report, include r
 
 | Country | Support ratio 2025 | Support ratio 2050 | Pension spending 2025 (% of GDP) | Pension spending 2050 (% of GDP) | Pension debt 2050 (% of GDP) |
 |---|---|---|---|---|---|
-| France | 1.64 | 1.30 | 13.4 | 16.3 | 51 |
-| Germany | 2.25 | 1.53 | 10.8 | 15.9 | 92 |
-| Spain | 2.30 | 1.06 | 12.3 | 26.2 | 181 |
-| Italy | 1.79 | 0.97 | 16.1 | 29.3 | 198 |
+| France | 1.64 | 1.30 | 13.4 | 16.3 | 53 |
+| Germany | 2.25 | 1.53 | 10.8 | 15.9 | 96 |
+| Spain | 2.30 | 1.06 | 12.3 | 26.2 | 188 |
+| Italy | 1.79 | 0.97 | 16.1 | 29.3 | 206 |
 
 These are the baseline results with all default values. The values come from the country files built in November 2026, and they change when the data is rebuilt.
 
