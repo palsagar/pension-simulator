@@ -1,8 +1,8 @@
 # Pension Simulator front end
 
 One static page. Alpine.js holds the state of the controls, calls the service, and hands the
-result to Observable Plot. There is no build step and no request to a third party: the three
-libraries and the two font families are in this folder.
+result to Observable Plot. There is no build step. The three libraries and the two font families are in this folder. The
+only request to another host is for analytics, and only on the live site.
 
 ## How it is served
 
@@ -38,6 +38,35 @@ tag before `app.js`, and allow that origin with CORS on the service.
 - Below 900 px the controls become a sheet at the bottom of the screen. The retirement age
   slider stays visible while the visitor scrolls the charts.
 - The theme follows the system setting until the visitor uses the switch.
+
+## Analytics
+
+The page loads the Umami script from `https://analytics.amalavidahomestay.com`. Umami sets no
+cookie. The script tag in `index.html` has three settings:
+
+- `data-domains`: only `pensions.gpuphysics.dev` sends data. A local run and the tests send nothing.
+- `data-do-not-track`: a browser that sends the Do Not Track signal sends no data.
+- `data-exclude-search`: the scenario in the address is not part of the page view, and a change
+  of the scenario is not a new page view.
+
+`track` in `app.js` sends one event for each action of the visitor. Each event carries the
+country on screen. A new control must send its own event.
+
+| Event | When | Data |
+|---|---|---|
+| `open-scenario` | The page opens with a country or a scenario in the address. | Each changed control and its value. |
+| `select-country` | The visitor picks a country, and its baseline loads. | |
+| `change-control` | The visitor lets go of a slider, or picks a balancing rule or an indexation. | `control`, `value` |
+| `reset-controls` | The visitor uses the reset button. | |
+| `change-horizon` | The visitor switches between 2050 and 2100. | `to` |
+| `change-theme` | The visitor uses the theme switch. | `theme` |
+| `open-help` | The visitor opens the explanation of a control. | `control` |
+| `open-controls-sheet` | The visitor opens the sheet of controls on a narrow screen. | |
+| `play-pyramid` | The visitor starts the play button of the population pyramid. | |
+| `change-pyramid-year` | The visitor lets go of the year slider of the pyramid. | `year` |
+| `change-birth-year` | The visitor lets go of the birth year slider. | `year` |
+| `change-return-unit` | The visitor switches the unit of the rate of return. | `unit` |
+| `follow-link` | The visitor follows a link in the header or the footer. | `to` |
 
 ## Things to know
 

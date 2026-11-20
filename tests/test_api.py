@@ -68,6 +68,8 @@ def test_frontend_is_served_next_to_the_api(client: TestClient) -> None:
     page = client.get("/")
     assert page.status_code == 200
     assert "<title>Western Europe Pension Simulator</title>" in page.text
+    # The analytics script must name the live host, so that tests and local runs send no data.
+    assert 'data-domains="pensions.gpuphysics.dev"' in page.text
     assert client.get("/app.js").status_code == 200
     font = client.get("/fonts/ibm-plex-sans-latin-400-normal.woff2")
     assert font.headers["content-type"] == "font/woff2"
