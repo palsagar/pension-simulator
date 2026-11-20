@@ -256,15 +256,17 @@
         schedule() { if (frame) return; frame = requestAnimationFrame(() => { frame = 0; this.simulate(); }); },
         async simulate() {
           if (busy) { queued = true; return; }
-          const mine = ++seq; controller = new AbortController(); busy = true;
+          const mine = ++seq; const ctl = controller = new AbortController(); busy = true;
+          // A request that gets no answer would block every later one. It is given up after 10 seconds and reported as failed.
+          let late = false; const limit = setTimeout(() => { late = true; ctl.abort(); }, 10000);
           const body = { country: this.code }; KEYS.forEach((k) => { if (this.p[k] !== this.defaults[k]) body[k] = this.p[k]; });
           try {
-            const run = this.changed ? await this.post(body, controller.signal) : data.base;
+            const run = this.changed ? await this.post(body, ctl.signal) : data.base;
             if (mine !== seq || !run) return;
             data.run = run; data.max = popMax(run); this.error = false; this.version++; this.syncUrl(); this.$nextTick(() => this.draw());
-          } catch (e) { if (e.name !== 'AbortError' && mine === seq) this.error = true; }
+          } catch (e) { if ((e.name !== 'AbortError' || late) && mine === seq) this.error = true; }
           // A new baseline has already cleared the flags, so an answer from before it leaves them alone.
-          finally { if (mine === seq) { busy = false; if (queued) { queued = false; this.simulate(); } } }
+          finally { clearTimeout(limit); if (mine === seq) { busy = false; if (queued) { queued = false; this.simulate(); } } }
         },
         syncUrl() {
           const q = new URLSearchParams(); if (this.code !== 'FRA') q.set('country', this.code);

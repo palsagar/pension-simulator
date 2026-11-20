@@ -30,7 +30,8 @@ tag before `app.js`, and allow that origin with CORS on the service.
   that differ from the defaults. Requests are limited to one per animation frame, and only one
   request is under way at a time. A change made during a request waits and goes out when that
   request returns. Each answer is drawn, so the charts follow a slider during a drag on a slow
-  connection. The charts keep the previous result until the new one arrives.
+  connection. A request with no answer after 10 seconds is given up and reported as failed. The
+  charts keep the previous result until the new one arrives.
 - If the service cannot be reached, the last result stays and a quiet message appears.
 - The scenario is kept in the address, for example `?country=ITA&age=70&rule=cut_pensions&to=2100`,
   so a visitor can share what they see.
