@@ -57,7 +57,7 @@ COUNTRIES: dict[str, tuple[str, float, Indexation]] = {
     "ESP": ("Spain", 66.67, "prices"),
 }
 WAGE_GROWTH = 0.01
-INTEREST_RATE = 0.015
+INTEREST_RATE = 0.02
 
 
 def fetch(url: str, path: Path) -> None:

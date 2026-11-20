@@ -38,6 +38,8 @@
     { key: 'raise_contributions', label: 'Raise contributions', note: 'Today’s workers pay more.' },
     { key: 'cut_pensions', label: 'Cut pensions', note: 'Today’s retirees get less.' }
   ];
+  // The population changes only with these controls. A test in tests/test_simulation.py checks it.
+  const POPULATION_KEYS = ['fertility', 'net_migration', 'longevity_pace'];
   const KEYS = ['retirement_age', 'retirement_age_year', 'contribution_rate', 'benefit_level', 'balancing_rule', 'indexation', 'wage_growth', 'interest_rate', 'fertility', 'net_migration', 'longevity_pace'];
   const URL_KEYS = { retirement_age: 'age', retirement_age_year: 'by', contribution_rate: 'rate', benefit_level: 'benefit', balancing_rule: 'rule', indexation: 'index', wage_growth: 'wages', interest_rate: 'interest', fertility: 'children', net_migration: 'migration', longevity_pace: 'longevity' };
   // A value from the address is used only when the service would accept it. A link with a value
@@ -263,9 +265,14 @@
           // A request that gets no answer would block every later one. It is given up after 10 seconds and reported as failed.
           let late = false; const limit = setTimeout(() => { late = true; ctl.abort(); }, 10000);
           const body = { country: this.code }; KEYS.forEach((k) => { if (this.p[k] !== this.defaults[k]) body[k] = this.p[k]; });
+          // The population table is most of an answer. When no population control is changed, the
+          // table is the same as in the baseline, so the page does not ask for it and uses that one.
+          const samePopulation = POPULATION_KEYS.every((k) => this.p[k] === this.defaults[k]);
+          if (samePopulation) body.include_population = false;
           try {
             const run = this.changed ? await this.post(body, ctl.signal) : data.base;
             if (mine !== seq || !run) return;
+            if (!run.population) run.population = data.base.population;
             data.run = run; data.max = popMax(run); this.error = false; this.version++; this.syncUrl(); this.$nextTick(() => this.draw());
           } catch (e) { if ((e.name !== 'AbortError' || late) && mine === seq) this.error = true; }
           // A new baseline owns the flags from the moment it starts, so an answer from before it leaves them alone.

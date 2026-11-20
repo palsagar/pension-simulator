@@ -31,7 +31,7 @@ docker run --rm -p 8000:8000 pension-simulator
 ```
 
 - `GET /countries` lists the countries with the default value of every control.
-- `POST /simulate` runs one scenario, for example `{"country": "FRA", "retirement_age": 65}`.
+- `POST /simulate` runs one scenario, for example `{"country": "FRA", "retirement_age": 65}`. Add `"include_population": false` to leave the population table out of the answer.
 
 ## Develop
 

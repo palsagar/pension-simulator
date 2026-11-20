@@ -25,6 +25,30 @@ def test_debt_accumulates_deficits_with_interest(country: CountryData) -> None:
     assert finances.debt[11] == pytest.approx(finances.debt[10] * 1.03 - balance[10])
 
 
+def test_only_population_controls_change_the_population(country: CountryData) -> None:
+    # The page reuses the population table of the baseline when fertility, net migration,
+    # and the pace of longevity are at their defaults. This holds only while no other
+    # control changes the population.
+    baseline = simulate(country, Scenario()).population
+    other_controls = Scenario(
+        retirement_age=70,
+        retirement_age_year=2060,
+        contribution_rate=0.3,
+        benefit_level=0.4,
+        balancing_rule="cut_pensions",
+        indexation="wages",
+        wage_growth=0.03,
+        interest_rate=0.05,
+    )
+    # A new control must be put in one of the two groups, here and in POPULATION_KEYS in app.js.
+    population_controls = {"fertility", "net_migration", "longevity_pace"}
+    assert set(Scenario.model_fields) == population_controls | other_controls.model_fields_set
+    assert (simulate(country, other_controls).population == baseline).all()
+    assert (simulate(country, Scenario(fertility=2.5)).population != baseline).any()
+    assert (simulate(country, Scenario(net_migration=500_000)).population != baseline).any()
+    assert (simulate(country, Scenario(longevity_pace=0.5)).population != baseline).any()
+
+
 def test_later_retirement_raises_the_support_ratio(country: CountryData) -> None:
     def support_ratio(scenario: Scenario) -> np.ndarray:
         finances = simulate(country, scenario).finances
