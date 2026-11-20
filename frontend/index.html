@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pension Simulator</title>
+<meta name="description" content="Pick a country, move the retirement age, and see what happens to its pay-as-you-go pension system up to 2050.">
+<meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e121b" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:,">
+<link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+<!-- Set window.PENSION_API_BASE before app.js if the API is on another origin. -->
+<script defer src="vendor/d3.min.js"></script>
+<script defer src="vendor/plot.umd.min.js"></script>
+<script defer src="app.js"></script>
+<script defer src="vendor/alpine.min.js"></script>
+</head>
+<body>
+<div class="ps" x-data="sim" :data-theme="theme">
+
+<header style="border-bottom: 1px solid var(--color-rule)">
+<div class="wrap" style="padding-top: var(--space-3); padding-bottom: var(--space-3); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5)">
+<span class="wordmark">Pension Simulator</span>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4)">
+<fieldset>
+<legend class="vh">Time span of the charts</legend>
+<div class="seg" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<label class="seg-i"><input type="radio" name="horizon" :checked="horizon === 25" @change="horizon = 25"><span>To 2050</span></label>
+<label class="seg-i"><input type="radio" name="horizon" :checked="horizon === 75" @change="horizon = 75"><span>To 2100</span></label>
+</div>
+</fieldset>
+<button type="button" class="btn" @click="toggleTheme()" x-text="theme === 'dark' ? 'Light theme' : 'Dark theme'">Dark theme</button>
+<a class="small" href="#how">How this works</a>
+</div>
+</div>
+</header>
+
+<div class="wrap" style="padding-top: var(--space-5); padding-bottom: var(--space-8)">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3) var(--space-7); padding-bottom: var(--space-5)">
+<h1 class="display" style="flex: 1.3 1 520px">Is your pension a Ponzi scheme?</h1>
+<p class="prose" style="flex: 1 1 380px">Many European countries pay pensions straight from the wages of today's workers. That works when there are many workers per retiree, and that number is falling. Move the retirement age and see who ends up paying.</p>
+</div>
+
+<div class="layout">
+
+<aside class="card rail" :class="sheetOpen && 'is-open'" aria-label="Controls">
+
+<div class="sheet-bar">
+<div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column">
+<span class="small muted">Retirement age</span>
+<span class="lab" style="font-size: var(--text-prose)" x-text="ageText.short"></span>
+</div>
+<button type="button" class="btn" :aria-expanded="sheetOpen ? 'true' : 'false'" @click="sheetOpen = !sheetOpen" x-text="sheetOpen ? 'Close' : 'All controls'">All controls</button>
+</div>
+
+<fieldset style="display: flex; flex-direction: column; gap: var(--space-2)">
+<legend class="lab" style="margin-bottom: var(--space-2)">Country</legend>
+<div class="seg" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+<template x-for="c in countries" :key="c.code">
+<label class="seg-i"><input type="radio" name="country" :checked="code === c.code" @change="pickCountry(c.code)"><span x-text="c.name"></span></label>
+</template>
+</div>
+</fieldset>
+
+<div class="age-block">
+<div class="age-head" style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2)">
+<label class="lab" for="ret-age">Retirement age</label>
+<button type="button" class="help" aria-label="Explain retirement age" :aria-expanded="help.age ? 'true' : 'false'" @click="help.age = !help.age">?</button>
+</div>
+<p class="small muted age-help" x-show="help.age" x-cloak>The age at which a person stops paying contributions and starts to receive a pension.</p>
+<div class="age-figure" style="display: flex; align-items: baseline; gap: var(--space-2)">
+<span class="figure" style="font-size: var(--text-hero-figure); color: var(--color-accent)" x-text="ageText.y"></span>
+<span style="font-size: var(--text-prose); font-weight: 500" x-text="ageText.rest"></span>
+</div>
+<div class="rgw rgw-hero">
+<input id="ret-age" class="rg rg-hero" type="range" min="0" max="80" step="1" aria-label="Retirement age" :value="ageIdx" :aria-valuetext="ageText.short" @input="setAge($event.target.value)">
+<span class="dtick" :style="'left:' + heroTick"></span>
+</div>
+<div class="small muted" style="display: flex; justify-content: space-between; gap: var(--space-2)">
+<span>55</span>
+<span x-text="defaultNote"></span>
+<span>75</span>
+</div>
+</div>
+
+<template x-for="s in mainSliders" :key="s.key">
+<div style="display: flex; flex-direction: column; gap: var(--space-1)">
+<div style="display: flex; align-items: center; gap: var(--space-2)">
+<label class="lab" :for="'c-' + s.key" style="flex: 1 1 auto" x-text="s.label"></label>
+<span class="lab" x-text="s.fmt(ui(s))"></span>
+<button type="button" class="help" :aria-label="'Explain ' + s.label.toLowerCase()" :aria-expanded="help[s.key] ? 'true' : 'false'" @click="help[s.key] = !help[s.key]">?</button>
+</div>
+<p class="small muted" x-show="help[s.key]" x-text="s.help"></p>
+<div class="rgw">
+<input :id="'c-' + s.key" class="rg" type="range" :min="s.min" :max="s.max" :step="s.step" :value="ui(s)" @input="setUi(s, $event.target.value)">
+<span class="dtick" :style="'left:' + tickLeft(s)"></span>
+</div>
+</div>
+</template>
+
+<fieldset style="display: flex; flex-direction: column; gap: var(--space-2)">
+<legend class="lab" style="margin-bottom: var(--space-2)">Who pays for a deficit</legend>
+<template x-for="r in rules" :key="r.key">
+<label class="opt"><input type="radio" name="rule" :checked="p.balancing_rule === r.key" @change="set('balancing_rule', r.key)"><span><span class="lab" x-text="r.label"></span><span class="small muted" x-text="r.note"></span></span></label>
+</template>
+</fieldset>
+
+<hr class="hr">
+
+<details class="fold">
+<summary>Assumptions</summary>
+<div style="display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-2) 0 var(--space-3)">
+<fieldset style="display: flex; flex-direction: column; gap: var(--space-2)">
+<legend class="lab" style="margin-bottom: var(--space-2)">Pensions rise with</legend>
+<div class="seg" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<label class="seg-i"><input type="radio" name="indexation" :checked="p.indexation === 'prices'" @change="set('indexation', 'prices')"><span>Prices</span></label>
+<label class="seg-i"><input type="radio" name="indexation" :checked="p.indexation === 'wages'" @change="set('indexation', 'wages')"><span>Wages</span></label>
+</div>
+</fieldset>
+<template x-for="s in assumptionSliders" :key="s.key">
+<div style="display: flex; flex-direction: column; gap: var(--space-1)">
+<div style="display: flex; align-items: center; gap: var(--space-2)">
+<label class="lab" :for="'c-' + s.key" style="flex: 1 1 auto" x-text="s.label"></label>
+<span class="lab" x-text="s.fmt(ui(s))"></span>
+<button type="button" class="help" :aria-label="'Explain ' + s.label.toLowerCase()" :aria-expanded="help[s.key] ? 'true' : 'false'" @click="help[s.key] = !help[s.key]">?</button>
+</div>
+<p class="small muted" x-show="help[s.key]" x-text="s.help"></p>
+<div class="rgw">
+<input :id="'c-' + s.key" class="rg" type="range" :min="s.min" :max="s.max" :step="s.step" :value="ui(s)" @input="setUi(s, $event.target.value)">
+<span class="dtick" :style="'left:' + tickLeft(s)"></span>
+</div>
+</div>
+</template>
+</div>
+</details>
+
+<button type="button" class="btn" @click="reset()" x-text="'Reset to ' + countryName + ' today'">Reset</button>
+</aside>
+
+<main class="main">
+
+<p class="small status" role="status" x-show="error" x-cloak>The simulation could not be reached. The last result stays on screen.</p>
+
+<section aria-label="Headline numbers" style="display: flex; flex-direction: column; gap: var(--space-2)">
+<div class="card stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr))">
+<template x-for="k in stats" :key="k.id">
+<div class="stat">
+<span class="small muted" x-text="k.label"></span>
+<span style="display: flex; align-items: baseline; gap: var(--space-2)"><span class="figure" x-text="k.value"></span><span class="small muted" x-text="k.unit"></span></span>
+<span class="small muted" x-text="k.context"></span>
+<span class="small" x-show="k.changed" style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2)"><span class="chip" x-text="k.delta"></span><span class="muted" x-text="k.base"></span></span>
+</div>
+</template>
+</div>
+<p class="small muted" style="max-width: 96ch">The baseline assumes that nothing changes. It is not a forecast: official projections are less pessimistic because they include reforms already in law.</p>
+</section>
+
+<figure class="card" style="padding: var(--space-4)" x-show="p.balancing_rule && p.balancing_rule !== 'borrow'" x-cloak>
+<figcaption style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-5)">
+<div style="display: flex; flex-direction: column; gap: 2px"><h2 class="title" x-text="leverTitle"></h2><p class="small muted" x-text="leverSub"></p></div>
+<div class="small" style="display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4)">
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-scen"></span>Your scenario</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-base"></span>Baseline</span>
+</div>
+</figcaption>
+<div class="chart" x-ref="lever" style="height: 220px"></div>
+</figure>
+
+<figure class="card" style="padding: var(--space-4)">
+<figcaption style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-5)">
+<div style="display: flex; flex-direction: column; gap: 2px"><h2 class="title">Pension debt</h2><p class="small muted">Accumulated deficits of the pension system, with interest, as a share of GDP. Below zero is a surplus.</p></div>
+<div class="small" style="display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4)">
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-scen"></span>Your scenario</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-base"></span>Baseline, nothing changes</span>
+</div>
+</figcaption>
+<div class="chart" x-ref="debt" style="height: 264px"></div>
+</figure>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: var(--space-4)">
+
+<figure class="card" style="padding: var(--space-4); min-width: 0">
+<figcaption style="display: flex; flex-direction: column; gap: var(--space-2)">
+<div style="display: flex; flex-direction: column; gap: 2px"><h2 class="title">Money in, money out</h2><p class="small muted">Contributions and pensions each year, as shares of GDP.</p></div>
+<div class="small" style="display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4)">
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-scen"></span>Pensions paid</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-second"></span>Contributions received</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw-box" style="background: var(--color-accent-wash)"></span>Annual balance</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-base"></span>Baseline</span>
+</div>
+</figcaption>
+<div class="chart" x-ref="money" style="height: 230px"></div>
+</figure>
+
+<figure class="card" style="padding: var(--space-4); min-width: 0">
+<figcaption style="display: flex; flex-direction: column; gap: var(--space-2)">
+<div style="display: flex; flex-direction: column; gap: 2px"><h2 class="title">Workers per retiree</h2><p class="small muted">Contributors divided by retirees, also called the support ratio.</p></div>
+<div class="small" style="display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4)">
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-scen"></span>Your scenario</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-base"></span>Baseline</span>
+</div>
+</figcaption>
+<div class="chart" x-ref="support" style="height: 230px"></div>
+</figure>
+
+</div>
+
+<figure class="card" style="padding: var(--space-4)">
+<figcaption style="display: flex; flex-direction: column; gap: 2px">
+<h2 class="title">Population by age</h2>
+<p class="small muted">This shape is why everything else happens. The line between working age and retired moves with the retirement age.</p>
+</figcaption>
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-4) var(--space-6); padding-top: var(--space-3)">
+<div style="flex: 3 1 380px; min-width: 0">
+<div class="small muted" style="display: flex; justify-content: space-around; margin: 0 var(--pyr-right, 52px) 0 44px"><span>Women</span><span>Men</span></div>
+<div class="chart" x-ref="pyramid" style="height: 400px; margin-top: 0"></div>
+<p class="small muted" style="margin: 0 var(--pyr-right, 52px) 0 44px; text-align: center">People per year of age</p>
+</div>
+<div style="flex: 2 1 260px; min-width: 0; display: flex; flex-direction: column; gap: var(--space-4)">
+<div style="display: flex; align-items: center; gap: var(--space-3)">
+<button type="button" class="btn btn-round" :aria-label="playing ? 'Pause' : 'Play through the years'" @click="togglePlay()">
+<svg x-show="!playing" width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11l9-5.5z" fill="currentColor"></path></svg>
+<svg x-show="playing" x-cloak width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"></path></svg>
+</button>
+<span class="figure" x-text="2025 + py"></span>
+</div>
+<div style="display: flex; flex-direction: column; gap: var(--space-1)">
+<label class="small muted" for="pyr-year">Year shown</label>
+<div class="rgw"><input id="pyr-year" class="rg" type="range" min="0" :max="horizon" step="1" :value="py" :aria-valuetext="2025 + py" @input="stopPlay(); py = Number($event.target.value)"></div>
+</div>
+<div style="display: flex; flex-direction: column">
+<template x-for="g in groups" :key="g.label">
+<div style="display: flex; align-items: baseline; gap: var(--space-2); padding: var(--space-2) 0; border-top: 1px solid var(--color-rule)">
+<span class="sw-box" :style="'align-self:center;background:' + g.color"></span>
+<span class="small" style="flex: 1 1 auto" x-text="g.label"></span>
+<span class="lab" x-text="g.count"></span>
+<span class="small muted" style="width: 44px; text-align: right" x-text="g.share"></span>
+</div>
+</template>
+</div>
+</div>
+</div>
+</figure>
+
+<figure class="card" style="padding: var(--space-4)">
+<figcaption style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-3) var(--space-5)">
+<div style="display: flex; flex-direction: column; gap: 2px"><h2 class="title">Generations</h2><p class="small muted">What people born in each year pay in over their life and get back, in years of average wage.</p></div>
+<div style="display: flex; flex-direction: column; gap: 2px; flex: 0 1 300px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2)"><label class="lab" for="birth">Your birth year</label><span class="lab" x-text="birth"></span></div>
+<div class="rgw"><input id="birth" class="rg" type="range" min="1960" max="2000" step="1" :value="birth" @input="birth = Number($event.target.value)"></div>
+</div>
+</figcaption>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: var(--space-4) var(--space-5); padding-top: var(--space-3)">
+<div style="min-width: 0; display: flex; flex-direction: column; gap: var(--space-2)">
+<div class="small" style="display: flex; flex-wrap: wrap; align-items: center; min-height: 40px; gap: var(--space-1) var(--space-4)">
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-scen"></span>Gets back</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-second"></span>Pays in</span>
+<span style="display: flex; align-items: center; gap: var(--space-2)"><span class="sw sw-base"></span>Baseline</span>
+</div>
+<div class="chart" x-ref="gen" style="height: 220px; margin-top: 0"></div>
+<p class="small" style="text-wrap: pretty"><span x-text="genReadout.a"></span> <span class="muted" x-text="genReadout.b"></span></p>
+</div>
+<div style="min-width: 0; display: flex; flex-direction: column; gap: var(--space-2)">
+<fieldset style="display: flex; flex-wrap: wrap; align-items: center; min-height: 40px; gap: var(--space-2) var(--space-3)">
+<legend class="small" style="float: left; margin-right: var(--space-3)">Rate of return</legend>
+<div class="seg" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<label class="seg-i"><input type="radio" name="unit" :checked="unit === 'w'" @change="unit = 'w'"><span>Above wage growth</span></label>
+<label class="seg-i"><input type="radio" name="unit" :checked="unit === 'p'" @change="unit = 'p'"><span>Above inflation</span></label>
+</div>
+</fieldset>
+<div class="chart" x-ref="ret" style="height: 220px; margin-top: 0"></div>
+<p class="small" style="text-wrap: pretty"><span x-text="retReadout.a"></span> <span class="muted" x-text="retReadout.b"></span></p>
+</div>
+</div>
+</figure>
+
+<section id="how" style="display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-7); padding-top: var(--space-6); border-top: 1px solid var(--color-rule); margin-top: var(--space-5)">
+<h2 class="display" style="font-size: 28px; flex: 1 1 220px">How this works</h2>
+<div style="flex: 3 1 420px; display: flex; flex-direction: column; gap: var(--space-3)">
+<p class="prose">The simulator moves every birth year forward one year at a time, for women and men separately, starting from the United Nations population projection. People in work below the retirement age pay contributions. People at or above it receive a pension.</p>
+<p class="prose">Each year the contributions are compared with the pensions. A gap is covered in the way you choose: by borrowing, by a higher contribution rate, or by a lower benefit level. Finances do not feed back into births, deaths, migration, or employment.</p>
+<p class="prose">Population data come from the United Nations, employment and pension spending from the OECD, and economic series from the European Commission. <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/modelling-choices.md">Method and data sources</a></p>
+</div>
+</section>
+
+</main>
+</div>
+</div>
+</div>
+</body>
+</html>

@@ -8,7 +8,7 @@ The first version covers France, Germany, Italy, and Spain.
 
 ## Status
 
-The backend is working: the model, the country data for the four countries, and the web service. The frontend is not yet built.
+The first version is working: the model, the country data for the four countries, the web service, and the frontend.
 
 ## Run it
 
@@ -19,7 +19,14 @@ uv sync
 uv run uvicorn --factory pension_simulator.api:create_app --reload
 ```
 
-The interactive API documentation is then at http://127.0.0.1:8000/docs.
+The simulator is then at http://127.0.0.1:8000/. The interactive API documentation is at http://127.0.0.1:8000/docs.
+
+To run it in a container instead:
+
+```bash
+docker build -t pension-simulator .
+docker run --rm -p 8000:8000 pension-simulator
+```
 
 - `GET /countries` lists the countries with the default value of every control.
 - `POST /simulate` runs one scenario, for example `{"country": "FRA", "retirement_age": 65}`.
@@ -44,7 +51,8 @@ uv run python scripts/build_country_data.py   # rebuild data/countries from publ
 ## Architecture
 
 - `src/pension_simulator/` holds the model as a plain Python package built on NumPy: `population.py`, `finance.py`, `ledger.py`, and `simulation.py`, which runs one scenario.
-- `src/pension_simulator/api.py` is a thin, stateless FastAPI layer.
+- `src/pension_simulator/api.py` is a thin, stateless FastAPI layer. It also serves the frontend.
+- `frontend/` holds the page: static HTML, CSS, and JavaScript with no build step. Alpine.js holds the state of the controls and Observable Plot draws the charts. See [`frontend/README.md`](frontend/README.md).
 - `data/countries/` holds one data file per country. `scripts/build_country_data.py` builds them from United Nations, OECD, and European Commission data.
 
 ## License
