@@ -50,7 +50,9 @@ tag before `app.js`, and allow that origin with CORS on the service.
 - **Default positions.** Germany and Spain have default retirement ages off the three-month
   grid (66.17 and 66.67). The slider shows the exact default and returns to it when the thumb
   is back on the marker. The same holds for the other sliders.
-- **Payload.** `/simulate` returns the whole population table, about 100 kB of JSON per call.
-  This is fine on one machine. Turn on gzip (`GZipMiddleware`) before deploying.
+- **Payload.** The population table is about 100 kB of JSON, most of an answer from `/simulate`.
+  It changes only with fertility, net migration, and the pace of longevity (`POPULATION_KEYS` in
+  `app.js`). When these three are at their defaults, the page sends `include_population: false`
+  and uses the table of the baseline. The answer is then about 17 kB.
 - The "How this works" section links to `docs/model.md` and `docs/modelling-choices.md` on GitHub. Change
   it in `index.html` if the repository moves.

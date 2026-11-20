@@ -43,6 +43,14 @@ def test_simulate_returns_yearly_series(client: TestClient) -> None:
     assert body["pensions_gdp"][0] == pytest.approx(0.14)
 
 
+def test_population_table_can_be_left_out(client: TestClient) -> None:
+    scenario = {"country": "TST", "retirement_age": 66}
+    full = client.post("/simulate", json=scenario).json()
+    short = client.post("/simulate", json={**scenario, "include_population": False}).json()
+    assert short["population"] is None
+    assert short["pension_debt_gdp"] == full["pension_debt_gdp"]
+
+
 def test_unknown_country_and_invalid_values_are_rejected(client: TestClient) -> None:
     assert client.post("/simulate", json={"country": "XXX"}).status_code == 404
     assert (

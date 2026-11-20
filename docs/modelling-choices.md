@@ -97,7 +97,11 @@ No dataset supplies these values in a usable form.
 
 For Germany, Italy, and Spain, the value is the standard retirement age in law for a person who retires in 2025. For France, the value is the minimum legal age, which is 62 years and 9 months. Most people in France retire at this age. The French age for a full pension without conditions is 67. This difference in concept is a limit on comparing the countries.
 
-Two defaults apply to every country: wages grow by 1% a year above inflation, and pension debt carries 1.5% interest a year above inflation. The user can change both.
+Two defaults apply to every country: wages grow by 1% a year above inflation, and pension debt carries 2% interest a year above inflation. The user can change both.
+
+The interest rate follows the yields on 10-year government bonds. In November 2026 these yields were about 4.7% in France, 4.5% in Italy, 4.0% in Spain, and 3.4% in Germany. The average is about 4.2%. Financial markets expected inflation of about 2.1% a year over the long term. This figure is the inflation swap rate for the five years that start in five years, as the European Commission reported it in spring 2026. The yield minus the expected inflation gives about 2% a year above inflation. The default was 1.5% before November 2026.
+
+One interest rate for all four countries is a simplification. The same calculation gives about 2.6% for France and about 1.3% for Germany.
 
 ## Simplifications
 

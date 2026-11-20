@@ -35,9 +35,16 @@ class Country(BaseModel):
 
 
 class SimulationRequest(Scenario):
-    """A scenario together with the country it applies to."""
+    """A scenario together with the country it applies to.
+
+    ``include_population`` set to false leaves the population table out of the
+    response. The table is most of the response, and it changes only with
+    ``fertility``, ``net_migration``, and ``longevity_pace``. A client that
+    already holds the table for these values does not need it again.
+    """
 
     country: str
+    include_population: bool = True
 
 
 class CohortLedger(BaseModel):
@@ -63,7 +70,8 @@ class SimulationResponse(BaseModel):
     """Yearly results of one scenario. Every list has one entry per year.
 
     Money series are shares of GDP. ``population`` is indexed by year, then sex
-    (0 is women, 1 is men), then age from 0 to 100.
+    (0 is women, 1 is men), then age from 0 to 100. It is ``null`` when the
+    request sets ``include_population`` to false.
     """
 
     years: list[int]
@@ -78,7 +86,7 @@ class SimulationResponse(BaseModel):
     contribution_rate: list[float]
     benefit_level: list[float]
     first_deficit_year: int | None
-    population: list[list[list[int]]]
+    population: list[list[list[int]]] | None
     cohorts: CohortLedger
 
 
@@ -180,7 +188,12 @@ def create_app(data_dir: Path | None = None) -> FastAPI:
                 / (finances.retirees * finances.gdp * countries[request.country].labour_share)
             ).tolist(),
             first_deficit_year=result.first_deficit_year,
-            population=result.population.round().astype(int).tolist(),
+            # The table is about 100 kB of JSON, so a client can decline it.
+            population=(
+                result.population.round().astype(int).tolist()
+                if request.include_population
+                else None
+            ),
             cohorts=CohortLedger(
                 birth_years=result.ledger.birth_years.tolist(),
                 lifetime_contributions=result.ledger.contributions.tolist(),
