@@ -223,7 +223,13 @@
         setAge(raw) { const i = Number(raw); this.set('retirement_age', i === this.defIdx ? this.defaults.retirement_age : 55 + i / 4); },
         set(key, value) { this.p[key] = value; this.schedule(); },
         reset() { this.p = Object.assign({}, this.defaults); this.schedule(); },
-        async pickCountry(code) { this.stopPlay(); this.code = code; this.p = Object.assign({}, this.defaults); await this.loadBaseline(); },
+        // When the baseline of the new country cannot be loaded, the page goes back to the country
+        // whose result is still on screen. The message stays visible.
+        async pickCountry(code) {
+          this.stopPlay(); const was = { code: this.code, p: this.p };
+          this.code = code; this.p = Object.assign({}, this.defaults);
+          if (!(await this.loadBaseline())) { this.code = was.code; this.p = was.p; }
+        },
         toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pension-theme', this.theme); } catch (e) { /* ignore */ } },
 
         /* ----- server ----- */
@@ -234,12 +240,14 @@
         },
         // A new baseline makes every request still under way out of date, so that a late answer
         // for the previous country cannot replace the charts of the new one.
+        // Returns false when the baseline could not be loaded.
         async loadBaseline() {
           const mine = ++baseSeq; seq++; if (controller) controller.abort();
-          let base; try { base = await this.post({ country: this.code }); } catch (e) { if (mine === baseSeq) this.error = true; return; }
-          if (mine !== baseSeq) return;
+          let base; try { base = await this.post({ country: this.code }); } catch (e) { if (mine !== baseSeq) return true; this.error = true; return false; }
+          if (mine !== baseSeq) return true;
           data.base = base; this.error = false;
           if (!this.changed) { data.run = data.base; data.max = popMax(data.base); this.version++; this.syncUrl(); this.$nextTick(() => this.draw()); } else await this.simulate();
+          return true;
         },
         // Every control is live: at most one request per animation frame, and a newer request cancels the older one.
         schedule() { if (frame) return; frame = requestAnimationFrame(() => { frame = 0; this.simulate(); }); },
