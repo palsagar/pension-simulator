@@ -61,5 +61,7 @@ def test_frontend_is_served_next_to_the_api(client: TestClient) -> None:
     assert page.status_code == 200
     assert "<title>Pension Simulator</title>" in page.text
     assert client.get("/app.js").status_code == 200
+    font = client.get("/fonts/ibm-plex-sans-latin-400-normal.woff2")
+    assert font.headers["content-type"] == "font/woff2"
     # The static files must not hide the API routes.
     assert client.get("/countries").headers["content-type"] == "application/json"

@@ -177,7 +177,7 @@
       const data = { base: null, run: null, max: 1 };
       const popMax = (run) => { let mx = 0; run.population.forEach((yr) => yr.forEach((sx) => sx.forEach((v) => { if (v > mx) mx = v; }))); return niceCeil(mx); };
       let lastWidth = 0;
-      let seq = 0; let controller = null; let frame = 0; let timer = null;
+      let seq = 0; let controller = null; let frame = 0; let timer = null; let baseSeq = 0;
 
       return {
         countries: [], code: 'FRA', p: {}, horizon: 25, error: false, version: 0,
@@ -232,8 +232,13 @@
           if (!r.ok) throw new Error('simulate ' + r.status);
           return r.json();
         },
+        // A new baseline makes every request still under way out of date, so that a late answer
+        // for the previous country cannot replace the charts of the new one.
         async loadBaseline() {
-          try { data.base = await this.post({ country: this.code }); this.error = false; } catch (e) { this.error = true; return; }
+          const mine = ++baseSeq; seq++; if (controller) controller.abort();
+          let base; try { base = await this.post({ country: this.code }); } catch (e) { if (mine === baseSeq) this.error = true; return; }
+          if (mine !== baseSeq) return;
+          data.base = base; this.error = false;
           if (!this.changed) { data.run = data.base; data.max = popMax(data.base); this.version++; this.syncUrl(); this.$nextTick(() => this.draw()); } else await this.simulate();
         },
         // Every control is live: at most one request per animation frame, and a newer request cancels the older one.

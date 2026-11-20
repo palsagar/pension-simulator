@@ -3,6 +3,7 @@
 The same application serves the frontend, a folder of static files, at ``/``.
 """
 
+import mimetypes
 import os
 from pathlib import Path
 
@@ -18,6 +19,9 @@ from pension_simulator.simulation import Scenario, simulate
 
 DEFAULT_DATA_DIR = Path(__file__).parents[2] / "data" / "countries"
 FRONTEND_DIR = Path(__file__).parents[2] / "frontend"
+
+# The slim container image has no system table of file types, so the font type is named here.
+mimetypes.add_type("font/woff2", ".woff2")
 
 
 class Country(BaseModel):
