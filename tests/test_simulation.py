@@ -40,6 +40,9 @@ def test_only_population_controls_change_the_population(country: CountryData) ->
         wage_growth=0.03,
         interest_rate=0.05,
     )
+    # A new control must be put in one of the two groups, here and in POPULATION_KEYS in app.js.
+    population_controls = {"fertility", "net_migration", "longevity_pace"}
+    assert set(Scenario.model_fields) == population_controls | other_controls.model_fields_set
     assert (simulate(country, other_controls).population == baseline).all()
     assert (simulate(country, Scenario(fertility=2.5)).population != baseline).any()
     assert (simulate(country, Scenario(net_migration=500_000)).population != baseline).any()
