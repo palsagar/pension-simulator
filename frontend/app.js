@@ -177,7 +177,7 @@
       const data = { base: null, run: null, max: 1 };
       const popMax = (run) => { let mx = 0; run.population.forEach((yr) => yr.forEach((sx) => sx.forEach((v) => { if (v > mx) mx = v; }))); return niceCeil(mx); };
       let lastWidth = 0;
-      let seq = 0; let controller = null; let frame = 0; let timer = null; let baseSeq = 0;
+      let seq = 0; let controller = null; let frame = 0; let timer = null; let baseSeq = 0; let busy = false; let queued = false;
 
       return {
         countries: [], code: 'FRA', p: {}, horizon: 25, error: false, version: 0,
@@ -242,23 +242,29 @@
         // for the previous country cannot replace the charts of the new one.
         // Returns false when the baseline could not be loaded.
         async loadBaseline() {
-          const mine = ++baseSeq; seq++; if (controller) controller.abort();
+          const mine = ++baseSeq; seq++; if (controller) controller.abort(); busy = false; queued = false;
           let base; try { base = await this.post({ country: this.code }); } catch (e) { if (mine !== baseSeq) return true; this.error = true; return false; }
           if (mine !== baseSeq) return true;
           data.base = base; this.error = false;
           if (!this.changed) { data.run = data.base; data.max = popMax(data.base); this.version++; this.syncUrl(); this.$nextTick(() => this.draw()); } else await this.simulate();
           return true;
         },
-        // Every control is live: at most one request per animation frame, and a newer request cancels the older one.
+        // Every control is live: at most one request per animation frame, and one request at a time.
+        // A change made while a request is under way waits, and goes out when that request returns.
+        // Each answer is drawn, so the charts follow a drag even when the connection is slow. A newer
+        // request must not cancel the older one: on a slow connection no answer would ever arrive.
         schedule() { if (frame) return; frame = requestAnimationFrame(() => { frame = 0; this.simulate(); }); },
         async simulate() {
-          const mine = ++seq; if (controller) controller.abort(); controller = new AbortController();
+          if (busy) { queued = true; return; }
+          const mine = ++seq; controller = new AbortController(); busy = true;
           const body = { country: this.code }; KEYS.forEach((k) => { if (this.p[k] !== this.defaults[k]) body[k] = this.p[k]; });
           try {
             const run = this.changed ? await this.post(body, controller.signal) : data.base;
             if (mine !== seq || !run) return;
             data.run = run; data.max = popMax(run); this.error = false; this.version++; this.syncUrl(); this.$nextTick(() => this.draw());
           } catch (e) { if (e.name !== 'AbortError' && mine === seq) this.error = true; }
+          // A new baseline has already cleared the flags, so an answer from before it leaves them alone.
+          finally { if (mine === seq) { busy = false; if (queued) { queued = false; this.simulate(); } } }
         },
         syncUrl() {
           const q = new URLSearchParams(); if (this.code !== 'FRA') q.set('country', this.code);
