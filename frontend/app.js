@@ -172,6 +172,12 @@
     });
   }
 
+  // The Umami script loads after this file, and it can arrive after the first events. These events wait here
+  // and go out when the script has loaded. The list holds 50 events at most, for the case that the script never loads.
+  const waiting = [];
+  const umamiScript = document.querySelector('script[data-website-id]');
+  if (umamiScript) umamiScript.addEventListener('load', () => { waiting.splice(0).forEach(([name, d]) => { try { window.umami.track(name, d); } catch (e) { /* ignore */ } }); });
+
   /* ---------- the page ---------- */
   document.addEventListener('alpine:init', () => {
     Alpine.data('sim', () => {
@@ -202,6 +208,8 @@
           KEYS.forEach((k) => { const v = q.get(URL_KEYS[k]); if (v == null || v === '') return; const x = typeof this.defaults[k] === 'number' ? Number(v) : v; if (allowed(k, x)) this.p[k] = x; });
           if (q.get('to') === '2100') this.horizon = 75;
           await this.loadBaseline();
+          // A visitor who arrives with a country or a scenario in the address, for example from a shared link.
+          if (this.changed || q.has('country')) this.track('open-scenario', Object.fromEntries(KEYS.filter((k) => this.p[k] !== this.defaults[k]).map((k) => [k, this.p[k]])));
           ['horizon', 'theme', 'unit', 'birth'].forEach((k) => this.$watch(k, () => { if (k === 'horizon') { this.py = Math.min(this.py, this.horizon); this.syncUrl(); } this.$nextTick(() => this.draw()); }));
           this.$watch('py', () => this.drawPyramid());
           this.$watch('p.balancing_rule', () => this.$nextTick(() => this.draw()));
@@ -224,15 +232,28 @@
         setUi(s, raw) { const v = Number(raw); const d = this.defaults[s.key]; this.set(s.key, v === snap(s, d * s.scale) ? d : Number((v / s.scale).toFixed(6))); },
         setAge(raw) { const i = Number(raw); this.set('retirement_age', i === this.defIdx ? this.defaults.retirement_age : 55 + i / 4); },
         set(key, value) { this.p[key] = value; this.schedule(); },
-        reset() { this.p = Object.assign({}, this.defaults); this.schedule(); },
+        reset() { this.p = Object.assign({}, this.defaults); this.schedule(); this.track('reset-controls'); },
         // When the baseline of the new country cannot be loaded, the page goes back to the country
         // whose result is still on screen. The message stays visible.
         async pickCountry(code) {
           this.stopPlay(); const was = { code: this.code, p: this.p };
           this.code = code; this.p = Object.assign({}, this.defaults);
-          if (!(await this.loadBaseline())) { this.code = was.code; this.p = was.p; }
+          const load = this.loadBaseline(); const mine = baseSeq;
+          if (!(await load)) { this.code = was.code; this.p = was.p; }
+          // A newer pick replaces this one before its baseline arrives. Only the newest pick sends the event.
+          else if (mine === baseSeq) this.track('select-country');
         },
-        toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pension-theme', this.theme); } catch (e) { /* ignore */ } },
+        toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pension-theme', this.theme); } catch (e) { /* ignore */ } this.track('change-theme', { theme: this.theme }); },
+
+        /* ----- analytics ----- */
+        // Events go to Umami, with the country on screen. The Umami script in index.html sends data only from
+        // the live host. When the script is absent or blocked, nothing happens. Analytics must never break the page.
+        track(name, props) {
+          const d = Object.assign({ country: this.code }, props);
+          try { if (window.umami) window.umami.track(name, d); else if (waiting.length < 50) waiting.push([name, d]); } catch (e) { /* ignore */ }
+        },
+        // Called when the visitor lets go of a control, so a drag gives one event and not one for each step.
+        trackControl(key) { this.track('change-control', { control: key, value: this.p[key] }); },
 
         /* ----- server ----- */
         async post(body, signal) {
@@ -327,6 +348,7 @@
         stopPlay() { if (timer) { clearInterval(timer); timer = null; } this.playing = false; },
         togglePlay() {
           if (this.playing) { this.stopPlay(); return; }
+          this.track('play-pyramid');
           if (this.py >= this.horizon) this.py = 0;
           this.playing = true;
           timer = setInterval(() => { if (this.py >= this.horizon) this.stopPlay(); else this.py++; }, 160);

@@ -15,6 +15,9 @@
 <script defer src="vendor/plot.umd.min.js"></script>
 <script defer src="app.js"></script>
 <script defer src="vendor/alpine.min.js"></script>
+<!-- Umami analytics. data-domains: only the live host sends data. data-exclude-search: the scenario in the address
+     stays out of the page view, and a change of the address does not count as a new page view. -->
+<script defer src="https://analytics.amalavidahomestay.com/script.js" data-website-id="7312a7a2-0d34-4f88-833c-8c9f2165cf9d" data-domains="pensions.gpuphysics.dev" data-do-not-track="true" data-exclude-search="true"></script>
 </head>
 <body>
 <div class="ps" x-data="sim" :data-theme="theme">
@@ -23,17 +26,17 @@
 <div class="wrap" style="padding-top: var(--space-3); padding-bottom: var(--space-3); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5)">
 <span class="wordmark">Western Europe Pension Simulator</span>
 <div style="display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2)">
-<p class="byline small muted">by <a href="https://sagar-pal.dev" target="_blank" rel="noopener noreferrer">Sagar Pal</a> · <a href="https://github.com/palsagar/pension-simulator" target="_blank" rel="noopener noreferrer">★ Star on GitHub</a></p>
+<p class="byline small muted">by <a href="https://sagar-pal.dev" @click="track('follow-link', { to: 'author-site' })" target="_blank" rel="noopener noreferrer">Sagar Pal</a> · <a href="https://github.com/palsagar/pension-simulator" @click="track('follow-link', { to: 'github' })" target="_blank" rel="noopener noreferrer">★ Star on GitHub</a></p>
 <div style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4)">
 <fieldset>
 <legend class="vh">Time span of the charts</legend>
 <div class="seg" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
-<label class="seg-i"><input type="radio" name="horizon" :checked="horizon === 25" @change="horizon = 25"><span>To 2050</span></label>
-<label class="seg-i"><input type="radio" name="horizon" :checked="horizon === 75" @change="horizon = 75"><span>To 2100</span></label>
+<label class="seg-i"><input type="radio" name="horizon" :checked="horizon === 25" @change="horizon = 25; track('change-horizon', { to: 2050 })"><span>To 2050</span></label>
+<label class="seg-i"><input type="radio" name="horizon" :checked="horizon === 75" @change="horizon = 75; track('change-horizon', { to: 2100 })"><span>To 2100</span></label>
 </div>
 </fieldset>
 <button type="button" class="btn" @click="toggleTheme()" x-text="theme === 'dark' ? 'Light theme' : 'Dark theme'">Dark theme</button>
-<a class="small" href="#how">How this works</a>
+<a class="small" href="#how" @click="track('follow-link', { to: 'how-this-works' })">How this works</a>
 </div>
 </div>
 </div>
@@ -55,7 +58,7 @@
 <span class="small muted">Retirement age</span>
 <span class="lab" style="font-size: var(--text-prose)" x-text="ageText.short"></span>
 </div>
-<button type="button" class="btn" :aria-expanded="sheetOpen ? 'true' : 'false'" @click="sheetOpen = !sheetOpen" x-text="sheetOpen ? 'Close' : 'All controls'">All controls</button>
+<button type="button" class="btn" :aria-expanded="sheetOpen ? 'true' : 'false'" @click="sheetOpen = !sheetOpen; sheetOpen && track('open-controls-sheet')" x-text="sheetOpen ? 'Close' : 'All controls'">All controls</button>
 </div>
 
 <fieldset style="display: flex; flex-direction: column; gap: var(--space-2)">
@@ -70,7 +73,7 @@
 <div class="age-block">
 <div class="age-head" style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-2)">
 <label class="lab" for="ret-age">Retirement age</label>
-<button type="button" class="help" aria-label="Explain retirement age" :aria-expanded="help.age ? 'true' : 'false'" @click="help.age = !help.age">?</button>
+<button type="button" class="help" aria-label="Explain retirement age" :aria-expanded="help.age ? 'true' : 'false'" @click="help.age = !help.age; help.age && track('open-help', { control: 'retirement_age' })">?</button>
 </div>
 <p class="small muted age-help" x-show="help.age" x-cloak>The age at which a person stops paying contributions and starts to receive a pension.</p>
 <div class="age-figure" style="display: flex; align-items: baseline; gap: var(--space-2)">
@@ -78,7 +81,7 @@
 <span style="font-size: var(--text-prose); font-weight: 500" x-text="ageText.rest"></span>
 </div>
 <div class="rgw rgw-hero">
-<input id="ret-age" class="rg rg-hero" type="range" min="0" max="80" step="1" aria-label="Retirement age" :value="ageIdx" :aria-valuetext="ageText.short" @input="setAge($event.target.value)">
+<input id="ret-age" class="rg rg-hero" type="range" min="0" max="80" step="1" aria-label="Retirement age" :value="ageIdx" :aria-valuetext="ageText.short" @input="setAge($event.target.value)" @change="trackControl('retirement_age')">
 <span class="dtick" :style="'left:' + heroTick"></span>
 </div>
 <div class="small muted" style="display: flex; justify-content: space-between; gap: var(--space-2)">
@@ -93,11 +96,11 @@
 <div style="display: flex; align-items: center; gap: var(--space-2)">
 <label class="lab" :for="'c-' + s.key" style="flex: 1 1 auto" x-text="s.label"></label>
 <span class="lab" x-text="s.fmt(ui(s))"></span>
-<button type="button" class="help" :aria-label="'Explain ' + s.label.toLowerCase()" :aria-expanded="help[s.key] ? 'true' : 'false'" @click="help[s.key] = !help[s.key]">?</button>
+<button type="button" class="help" :aria-label="'Explain ' + s.label.toLowerCase()" :aria-expanded="help[s.key] ? 'true' : 'false'" @click="help[s.key] = !help[s.key]; help[s.key] && track('open-help', { control: s.key })">?</button>
 </div>
 <p class="small muted" x-show="help[s.key]" x-text="s.help"></p>
 <div class="rgw">
-<input :id="'c-' + s.key" class="rg" type="range" :min="s.min" :max="s.max" :step="s.step" :value="ui(s)" @input="setUi(s, $event.target.value)">
+<input :id="'c-' + s.key" class="rg" type="range" :min="s.min" :max="s.max" :step="s.step" :value="ui(s)" @input="setUi(s, $event.target.value)" @change="trackControl(s.key)">
 <span class="dtick" :style="'left:' + tickLeft(s)"></span>
 </div>
 </div>
@@ -106,7 +109,7 @@
 <fieldset style="display: flex; flex-direction: column; gap: var(--space-2)">
 <legend class="lab" style="margin-bottom: var(--space-2)">Who pays for a deficit</legend>
 <template x-for="r in rules" :key="r.key">
-<label class="opt"><input type="radio" name="rule" :checked="p.balancing_rule === r.key" @change="set('balancing_rule', r.key)"><span><span class="lab" x-text="r.label"></span><span class="small muted" x-text="r.note"></span></span></label>
+<label class="opt"><input type="radio" name="rule" :checked="p.balancing_rule === r.key" @change="set('balancing_rule', r.key); trackControl('balancing_rule')"><span><span class="lab" x-text="r.label"></span><span class="small muted" x-text="r.note"></span></span></label>
 </template>
 </fieldset>
 
@@ -118,8 +121,8 @@
 <fieldset style="display: flex; flex-direction: column; gap: var(--space-2)">
 <legend class="lab" style="margin-bottom: var(--space-2)">Pensions rise with</legend>
 <div class="seg" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
-<label class="seg-i"><input type="radio" name="indexation" :checked="p.indexation === 'prices'" @change="set('indexation', 'prices')"><span>Prices</span></label>
-<label class="seg-i"><input type="radio" name="indexation" :checked="p.indexation === 'wages'" @change="set('indexation', 'wages')"><span>Wages</span></label>
+<label class="seg-i"><input type="radio" name="indexation" :checked="p.indexation === 'prices'" @change="set('indexation', 'prices'); trackControl('indexation')"><span>Prices</span></label>
+<label class="seg-i"><input type="radio" name="indexation" :checked="p.indexation === 'wages'" @change="set('indexation', 'wages'); trackControl('indexation')"><span>Wages</span></label>
 </div>
 </fieldset>
 <template x-for="s in assumptionSliders" :key="s.key">
@@ -127,11 +130,11 @@
 <div style="display: flex; align-items: center; gap: var(--space-2)">
 <label class="lab" :for="'c-' + s.key" style="flex: 1 1 auto" x-text="s.label"></label>
 <span class="lab" x-text="s.fmt(ui(s))"></span>
-<button type="button" class="help" :aria-label="'Explain ' + s.label.toLowerCase()" :aria-expanded="help[s.key] ? 'true' : 'false'" @click="help[s.key] = !help[s.key]">?</button>
+<button type="button" class="help" :aria-label="'Explain ' + s.label.toLowerCase()" :aria-expanded="help[s.key] ? 'true' : 'false'" @click="help[s.key] = !help[s.key]; help[s.key] && track('open-help', { control: s.key })">?</button>
 </div>
 <p class="small muted" x-show="help[s.key]" x-text="s.help"></p>
 <div class="rgw">
-<input :id="'c-' + s.key" class="rg" type="range" :min="s.min" :max="s.max" :step="s.step" :value="ui(s)" @input="setUi(s, $event.target.value)">
+<input :id="'c-' + s.key" class="rg" type="range" :min="s.min" :max="s.max" :step="s.step" :value="ui(s)" @input="setUi(s, $event.target.value)" @change="trackControl(s.key)">
 <span class="dtick" :style="'left:' + tickLeft(s)"></span>
 </div>
 </div>
@@ -231,7 +234,7 @@
 </div>
 <div style="display: flex; flex-direction: column; gap: var(--space-1)">
 <label class="small muted" for="pyr-year">Year shown</label>
-<div class="rgw"><input id="pyr-year" class="rg" type="range" min="0" :max="horizon" step="1" :value="py" :aria-valuetext="2025 + py" @input="stopPlay(); py = Number($event.target.value)"></div>
+<div class="rgw"><input id="pyr-year" class="rg" type="range" min="0" :max="horizon" step="1" :value="py" :aria-valuetext="2025 + py" @input="stopPlay(); py = Number($event.target.value)" @change="track('change-pyramid-year', { year: 2025 + py })"></div>
 </div>
 <div style="display: flex; flex-direction: column">
 <template x-for="g in groups" :key="g.label">
@@ -252,7 +255,7 @@
 <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="title">Generations</h2><p class="small muted">What people born in each year pay in over their life and get back, in years of average wage.</p></div>
 <div style="display: flex; flex-direction: column; gap: 2px; flex: 0 1 300px">
 <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2)"><label class="lab" for="birth">Your birth year</label><span class="lab" x-text="birth"></span></div>
-<div class="rgw"><input id="birth" class="rg" type="range" min="1960" max="2000" step="1" :value="birth" @input="birth = Number($event.target.value)"></div>
+<div class="rgw"><input id="birth" class="rg" type="range" min="1960" max="2000" step="1" :value="birth" @input="birth = Number($event.target.value)" @change="track('change-birth-year')"></div>
 </div>
 </figcaption>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: var(--space-4) var(--space-5); padding-top: var(--space-3)">
@@ -269,8 +272,8 @@
 <fieldset style="display: flex; flex-wrap: wrap; align-items: center; min-height: 40px; gap: var(--space-2) var(--space-3)">
 <legend class="small" style="float: left; margin-right: var(--space-3)">Rate of return</legend>
 <div class="seg" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
-<label class="seg-i"><input type="radio" name="unit" :checked="unit === 'w'" @change="unit = 'w'"><span>Above wage growth</span></label>
-<label class="seg-i"><input type="radio" name="unit" :checked="unit === 'p'" @change="unit = 'p'"><span>Above inflation</span></label>
+<label class="seg-i"><input type="radio" name="unit" :checked="unit === 'w'" @change="unit = 'w'; track('change-return-unit', { unit: 'above-wage-growth' })"><span>Above wage growth</span></label>
+<label class="seg-i"><input type="radio" name="unit" :checked="unit === 'p'" @change="unit = 'p'; track('change-return-unit', { unit: 'above-inflation' })"><span>Above inflation</span></label>
 </div>
 </fieldset>
 <div class="chart" x-ref="ret" style="height: 220px; margin-top: 0"></div>
@@ -311,7 +314,7 @@
 <p class="small muted">For people born in year <i>c</i>, the rate of return <i>i</i> is the rate at which their pensions and contributions cancel over a lifetime. <i>l</i><sub><i>c</i></sub>(<i>a</i>) is their chance of being alive at age <i>a</i>.</p>
 </div>
 </div>
-<p class="prose" style="flex: 1 1 100%; max-width: 96ch">Population data come from the United Nations, employment and pension spending from the OECD, and economic series from the European Commission. The code and every data file are public. <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/model.md">The full mathematics</a> · <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/modelling-choices.md">Assumptions and data sources</a></p>
+<p class="prose" style="flex: 1 1 100%; max-width: 96ch">Population data come from the United Nations, employment and pension spending from the OECD, and economic series from the European Commission. The code and every data file are public. <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/model.md" @click="track('follow-link', { to: 'model-document' })">The full mathematics</a> · <a href="https://github.com/palsagar/pension-simulator/blob/main/docs/modelling-choices.md" @click="track('follow-link', { to: 'assumptions-document' })">Assumptions and data sources</a></p>
 </section>
 
 </main>
