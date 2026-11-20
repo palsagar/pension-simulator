@@ -172,6 +172,12 @@
     });
   }
 
+  // The Umami script loads after this file, and it can arrive after the first events. These events wait here
+  // and go out when the script has loaded. The list holds 50 events at most, for the case that the script never loads.
+  const waiting = [];
+  const umamiScript = document.querySelector('script[data-website-id]');
+  if (umamiScript) umamiScript.addEventListener('load', () => { waiting.splice(0).forEach(([name, d]) => { try { window.umami.track(name, d); } catch (e) { /* ignore */ } }); });
+
   /* ---------- the page ---------- */
   document.addEventListener('alpine:init', () => {
     Alpine.data('sim', () => {
@@ -232,14 +238,20 @@
         async pickCountry(code) {
           this.stopPlay(); const was = { code: this.code, p: this.p };
           this.code = code; this.p = Object.assign({}, this.defaults);
-          if (!(await this.loadBaseline())) { this.code = was.code; this.p = was.p; } else this.track('select-country');
+          const load = this.loadBaseline(); const mine = baseSeq;
+          if (!(await load)) { this.code = was.code; this.p = was.p; }
+          // A newer pick replaces this one before its baseline arrives. Only the newest pick sends the event.
+          else if (mine === baseSeq) this.track('select-country');
         },
         toggleTheme() { this.theme = this.theme === 'dark' ? 'light' : 'dark'; try { localStorage.setItem('pension-theme', this.theme); } catch (e) { /* ignore */ } this.track('change-theme', { theme: this.theme }); },
 
         /* ----- analytics ----- */
         // Events go to Umami, with the country on screen. The Umami script in index.html sends data only from
         // the live host. When the script is absent or blocked, nothing happens. Analytics must never break the page.
-        track(name, props) { try { if (window.umami) window.umami.track(name, Object.assign({ country: this.code }, props)); } catch (e) { /* ignore */ } },
+        track(name, props) {
+          const d = Object.assign({ country: this.code }, props);
+          try { if (window.umami) window.umami.track(name, d); else if (waiting.length < 50) waiting.push([name, d]); } catch (e) { /* ignore */ }
+        },
         // Called when the visitor lets go of a control, so a drag gives one event and not one for each step.
         trackControl(key) { this.track('change-control', { control: key, value: this.p[key] }); },
 

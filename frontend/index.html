@@ -255,7 +255,7 @@
 <div style="display: flex; flex-direction: column; gap: 2px"><h2 class="title">Generations</h2><p class="small muted">What people born in each year pay in over their life and get back, in years of average wage.</p></div>
 <div style="display: flex; flex-direction: column; gap: 2px; flex: 0 1 300px">
 <div style="display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2)"><label class="lab" for="birth">Your birth year</label><span class="lab" x-text="birth"></span></div>
-<div class="rgw"><input id="birth" class="rg" type="range" min="1960" max="2000" step="1" :value="birth" @input="birth = Number($event.target.value)" @change="track('change-birth-year', { year: birth })"></div>
+<div class="rgw"><input id="birth" class="rg" type="range" min="1960" max="2000" step="1" :value="birth" @input="birth = Number($event.target.value)" @change="track('change-birth-year')"></div>
 </div>
 </figcaption>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: var(--space-4) var(--space-5); padding-top: var(--space-3)">

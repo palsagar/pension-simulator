@@ -50,7 +50,7 @@ cookie. The script tag in `index.html` has three settings:
   of the scenario is not a new page view.
 
 `track` in `app.js` sends one event for each action of the visitor. Each event carries the
-country on screen. A new control must send its own event.
+country on screen. An event sent before the Umami script has loaded waits and goes out when it loads. A new control must send its own event.
 
 | Event | When | Data |
 |---|---|---|
@@ -64,7 +64,7 @@ country on screen. A new control must send its own event.
 | `open-controls-sheet` | The visitor opens the sheet of controls on a narrow screen. | |
 | `play-pyramid` | The visitor starts the play button of the population pyramid. | |
 | `change-pyramid-year` | The visitor lets go of the year slider of the pyramid. | `year` |
-| `change-birth-year` | The visitor lets go of the birth year slider. | `year` |
+| `change-birth-year` | The visitor lets go of the birth year slider. The year is not sent: it can be the visitor's own. | |
 | `change-return-unit` | The visitor switches the unit of the rate of return. | `unit` |
 | `follow-link` | The visitor follows a link in the header or the footer. | `to` |
 
